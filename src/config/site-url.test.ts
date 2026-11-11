@@ -6,6 +6,10 @@ describe("site URL configuration", () => {
     expect(getSiteUrl("http://localhost:3000", "production").origin).toBe(PRODUCTION_SITE_URL);
   });
 
+  it("uses the production domain when APP_URL is the wildcard bind address", () => {
+    expect(getSiteUrl("https://0.0.0.0:8080", "production").origin).toBe(PRODUCTION_SITE_URL);
+  });
+
   it("preserves an explicitly configured production domain", () => {
     expect(getSiteUrl("https://example.com", "production").origin).toBe("https://example.com");
   });
