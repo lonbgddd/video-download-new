@@ -31,7 +31,7 @@ async function capture({ width, height, file, mobile = false }) {
   await send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile, screenWidth: width, screenHeight: height });
   await send("Page.navigate", { url: "http://127.0.0.1:4173/" }); await wait(1800);
   if (!mobile) {
-    await send("Runtime.evaluate", { expression: `(() => { const input = document.querySelector('input[aria-label="URL video"]'); const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set; setter.call(input, 'https://www.w3schools.com/html/mov_bbb.mp4'); input.dispatchEvent(new Event('input', { bubbles: true })); document.querySelector('.url-analyzer').requestSubmit(); })()` });
+    await send("Runtime.evaluate", { expression: `(() => { const input = document.querySelector('input[aria-label="URL video"]'); const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set; setter.call(input, 'https://samplelib.com/preview/mp4/sample-5s.mp4'); input.dispatchEvent(new Event('input', { bubbles: true })); document.querySelector('.url-analyzer').requestSubmit(); })()` });
     await wait(6500);
   }
   const metrics = await send("Runtime.evaluate", { expression: `({ innerWidth, innerHeight, bodyWidth: document.body.scrollWidth, htmlWidth: document.documentElement.scrollWidth, title: document.title, overflow: [...document.querySelectorAll('body *')].map((element) => ({ selector: element.className || element.tagName, right: element.getBoundingClientRect().right, width: element.getBoundingClientRect().width })).filter((item) => item.right > innerWidth + 1).slice(0, 8) })`, returnByValue: true });

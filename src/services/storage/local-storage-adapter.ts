@@ -13,7 +13,7 @@ export function sanitizeFilename(value: string) {
 
 export class LocalStorageAdapter implements StorageAdapter {
   private ensureJobId(jobId: string) { if (!safeId.test(jobId)) throw new AppError("INVALID_URL", "Invalid job identifier"); }
-  async createJobDirectory(jobId: string) { this.ensureJobId(jobId); const directory = path.join(env.TEMP_DIRECTORY, jobId); await mkdir(directory, { recursive: false, mode: 0o700 }); return directory; }
+  async createJobDirectory(jobId: string) { this.ensureJobId(jobId); await mkdir(env.TEMP_DIRECTORY, { recursive: true, mode: 0o700 }); const directory = path.join(env.TEMP_DIRECTORY, jobId); await mkdir(directory, { recursive: false, mode: 0o700 }); return directory; }
   resolveJobFile(jobId: string, fileName: string) { this.ensureJobId(jobId); return path.join(env.TEMP_DIRECTORY, jobId, sanitizeFilename(path.basename(fileName))); }
   async openReadStream(jobId: string, fileName: string) { const file = this.resolveJobFile(jobId, fileName); await stat(file); return createReadStream(file); }
   async removeJob(jobId: string) { this.ensureJobId(jobId); await rm(path.join(env.TEMP_DIRECTORY, jobId), { recursive: true, force: true }); }

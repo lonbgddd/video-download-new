@@ -18,6 +18,7 @@
 - Image quality and asset fidelity: the hero uses a dedicated high-resolution transparent raster asset matching the purple video/download illustration. The result fallback uses a dedicated 16:9 alpine-lake raster asset. No CSS/div/handmade SVG substitutes are used for these visible source assets; UI and brand icons come from Lucide and React Icons.
 - Copy and content: core Vietnamese copy follows the brief. Platform badges deliberately say `Limited` where yt-dlp is required, and only direct media says `Supported`; this is a product-integrity deviation from the optimistic source screenshot.
 - States and interactions: real URL analysis, success result, format selection, loading, validation error, server error, empty state, download modal, dark toggle, language popover, accessible FAQ, mobile menu and history are implemented. Chrome QA confirmed the real success card, dark-theme toggle and mobile-menu open state.
+- Core flow smoke test: the Samplelib direct MP4 completed `analyze → create job → poll → completed → opaque URL → streamed attachment`, returning 2,848,208 bytes as `video/mp4`.
 - Accessibility: semantic buttons/forms, visible focus, labels, alt text, Radix focus-trapped dialog/accordion, reduced-motion handling and practical mobile targets are present.
 
 **Comparison History**
@@ -25,7 +26,7 @@
 1. Initial pass found P2 density drift: the 46 px headline wrapped, X moved to a second chip row, the platform strip was too tall, and the page pushed important lower sections too far below the 1024 px frame. Fixed by matching the display scale, widening the hero copy region, and tightening feature/platform/guide rhythm. Post-fix evidence: `implementation-desktop-2.png`.
 2. Responsive pass found P1 mobile horizontal clipping in the first raw Chrome capture. Fixed by constraining hero/analyzer flex children, enforcing viewport-width shells, making platform chips an intentional horizontal scroller, and converting the empty state to a two-column mobile grid. CDP verification reports `documentElement.scrollWidth === innerWidth` at 390 px. Post-fix evidence: `implementation-mobile-final.png`.
 3. Runtime pass found a P1 theme hydration mismatch caused by conditional icon rendering before `next-themes` resolved. Fixed by rendering stable theme-toggle icon markup on server and client. Final desktop and mobile console checks report zero errors.
-4. Final same-state pass used `https://www.w3schools.com/html/mov_bbb.mp4`, analyzed through the real direct-media extractor. The source and implementation are shown together in `design-comparison.png` and the focused hero/result crop in `design-comparison-focus.png`.
+4. Final same-state pass used a public Samplelib MP4, analyzed through the real direct-media extractor. The source and implementation are shown together in `design-comparison.png` and the focused hero/result crop in `design-comparison-focus.png`.
 
 **Open Questions**
 

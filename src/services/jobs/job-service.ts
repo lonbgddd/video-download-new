@@ -53,6 +53,7 @@ class JobService {
       this.update(job, { status: "completed", progress: 100, message: "File đã sẵn sàng.", fileName: prepared.fileName, filePath: prepared.filePath, mimeType: prepared.mimeType, downloadToken: randomBytes(32).toString("base64url") });
     } catch (error) {
       await storageService.removeJob(job.id).catch(() => undefined);
+      console.error(JSON.stringify({ level: "error", jobId: job.id, status: "failed", code: error instanceof AppError ? error.code : "PROCESSING_FAILED", message: error instanceof Error ? error.message : "Unknown job error" }));
       this.update(job, { status: "failed", progress: null, message: error instanceof Error && error.name === "AbortError" ? "Quá trình xử lý đã hết thời gian." : "Không thể chuẩn bị file tải xuống.", error: error instanceof AppError ? error.code : "PROCESSING_FAILED" });
     } finally { clearTimeout(timeout); }
   }
