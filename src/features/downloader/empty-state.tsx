@@ -1,0 +1,2 @@
+import { Link2, ShieldCheck, Sparkles } from "lucide-react";
+export function EmptyState() { return <section className="empty-result" aria-label="Chưa có kết quả"><div className="empty-icon"><Link2/></div><div><h2>Kết quả tải xuống sẽ xuất hiện tại đây</h2><p>Dán một liên kết media công khai để xem metadata và các định dạng thực sự có sẵn.</p></div><span><ShieldCheck/> Không DRM</span><span><Sparkles/> Không dữ liệu giả</span></section>; }

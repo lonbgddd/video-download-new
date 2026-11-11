@@ -1,0 +1,23 @@
+"use client";
+import { useState } from "react";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, useWatch } from "react-hook-form";
+import { ClipboardPaste, Download, Link2, LoaderCircle, X } from "lucide-react";
+import { useMediaAnalyzer } from "@/hooks/use-media-analyzer";
+import { analytics } from "@/services/analytics/analytics-adapter";
+import { LoadingSkeleton } from "./loading-skeleton";
+import { MediaResult } from "./media-result";
+import { EmptyState } from "./empty-state";
+import { Toast } from "@/components/ui/toast";
+
+const schema = z.object({ url: z.string().trim().url("Hãy nhập một URL hợp lệ bắt đầu bằng http:// hoặc https://").max(2048) });
+type Values = z.infer<typeof schema>;
+
+export function UrlAnalyzer() {
+  const analyzer = useMediaAnalyzer(); const [pasteMessage, setPasteMessage] = useState("");
+  const { register, handleSubmit, setValue, reset, control, formState: { errors } } = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { url: "" } }); const value = useWatch({ control, name: "url" });
+  const submit = ({ url }: Values) => analyzer.mutate(url);
+  const paste = async () => { try { const text = await navigator.clipboard.readText(); setValue("url", text, { shouldValidate: true }); analytics.track("paste_url"); setPasteMessage("Đã dán"); setTimeout(() => setPasteMessage(""), 1500); } catch { setPasteMessage("Trình duyệt không cho phép đọc clipboard"); } };
+  return <div id="analyzer"><form className={`url-analyzer ${errors.url ? "invalid" : ""}`} onSubmit={handleSubmit(submit)} noValidate><Link2 className="input-icon"/><input {...register("url")} aria-label="URL video" placeholder="Dán link video vào đây..." autoComplete="url" disabled={analyzer.isPending}/>{value && <button type="button" className="clear-button" aria-label="Xóa URL" onClick={() => { reset(); analyzer.reset(); }}><X/></button>}<button type="button" className="paste-button" onClick={paste}><ClipboardPaste/> <span>{pasteMessage || "Dán link"}</span></button><button className="analyze-button" type="submit" disabled={analyzer.isPending}>{analyzer.isPending ? <LoaderCircle className="spin"/> : <Download/>}<span>{analyzer.isPending ? "Đang phân tích..." : "Phân tích"}</span></button></form>{errors.url && <p className="form-error" role="alert">{errors.url.message}</p>}{analyzer.error && <div className="api-error" role="alert"><strong>Không thể phân tích liên kết này.</strong><span>{analyzer.error.message}</span><button onClick={() => analyzer.reset()}>Thử lại</button></div>}{analyzer.isPending ? <LoadingSkeleton/> : analyzer.data ? <MediaResult media={analyzer.data}/> : !analyzer.error ? <EmptyState/> : null}{pasteMessage && <Toast message={pasteMessage} tone={pasteMessage === "Đã dán" ? "success" : "error"}/>}</div>;
+}

@@ -1,0 +1,17 @@
+import type { Metadata, Viewport } from "next";
+import "./globals.css";
+import { Providers } from "./providers";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(process.env.APP_URL ?? "http://localhost:3000"),
+  title: { default: "VideoDownloader – Tải nội dung công khai", template: "%s | VideoDownloader" },
+  description: "Phân tích liên kết media công khai và tải các định dạng hợp lệ mà bạn có quyền sử dụng.",
+  alternates: { canonical: "/" },
+  openGraph: { title: "VideoDownloader", description: "Công cụ tải media công khai an toàn và minh bạch.", type: "website", locale: "vi_VN" },
+  twitter: { card: "summary_large_image", title: "VideoDownloader", description: "Phân tích và tải media công khai." },
+};
+export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: [{ media: "(prefers-color-scheme: light)", color: "#f8f7ff" }, { media: "(prefers-color-scheme: dark)", color: "#0e0f17" }] };
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  return <html lang="vi" suppressHydrationWarning><body><Providers>{children}</Providers></body></html>;
+}

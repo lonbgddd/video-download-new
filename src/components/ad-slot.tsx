@@ -1,0 +1,1 @@
+export function AdSlot({ position }: { position: "below-analyzer" | "between-sections" | "mobile-sticky" }) { if (process.env.NEXT_PUBLIC_ADS_ENABLED !== "true") return null; return <aside className={`ad-slot ${position}`} aria-label="Quảng cáo"><small>Quảng cáo</small></aside>; }
