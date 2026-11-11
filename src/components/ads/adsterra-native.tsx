@@ -63,7 +63,9 @@ export function AdsterraNative({
     >
       <span className="ad-disclosure">{label}</span>
       {!unit && (
-        <div className="ad-slot-placeholder" aria-hidden="true">
+        <div className="ad-slot-placeholder">
+          <span>{label}</span>
+          <small>Banner zone chưa được cấu hình</small>
           {/*
             Configure the matching NEXT_PUBLIC_ADSTERRA_*_SCRIPT_URL and
             NEXT_PUBLIC_ADSTERRA_*_CONTAINER_ID pair in `.env` for this slot.

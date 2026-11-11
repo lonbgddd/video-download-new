@@ -3,7 +3,7 @@ services:
     build:
       context: .
       args:
-        ADS_ENABLED: ${ADS_ENABLED:-false}
+        ADS_ENABLED: ${ADS_ENABLED:-true}
         NEXT_PUBLIC_MONETAG_VIGNETTE_ZONE_ID: ${NEXT_PUBLIC_MONETAG_VIGNETTE_ZONE_ID:-12238810}
         NEXT_PUBLIC_MONETAG_VIGNETTE_SCRIPT_URL: ${NEXT_PUBLIC_MONETAG_VIGNETTE_SCRIPT_URL:-https://n6wxm.com/vignette.min.js}
         NEXT_PUBLIC_MONETAG_IN_PAGE_PUSH_ZONE_ID: ${NEXT_PUBLIC_MONETAG_IN_PAGE_PUSH_ZONE_ID:-12238840}
@@ -26,7 +26,7 @@ services:
         required: false
     environment:
       APP_URL: ${APP_URL:-http://localhost:3000}
-      ADS_ENABLED: ${ADS_ENABLED:-false}
+      ADS_ENABLED: ${ADS_ENABLED:-true}
     restart: unless-stopped
     read_only: true
     security_opt:

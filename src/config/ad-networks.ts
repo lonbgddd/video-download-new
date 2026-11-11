@@ -23,6 +23,12 @@ type AdsterraNativeUnit = {
   containerId: string;
 };
 
+// Ads are enabled by default for this ad-supported site. Set ADS_ENABLED=false
+// explicitly in local/CI/production environments to disable every network.
+export function areAdsEnabled(): boolean {
+  return process.env.ADS_ENABLED !== "false";
+}
+
 const ADSTERRA_NATIVE_PLACEMENTS: Record<
   AdsterraNativePlacement,
   AdsterraNativeUnit | undefined

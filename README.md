@@ -78,7 +78,7 @@ Các chủ đề mới kết hợp 25 loại media với 20 nhu cầu sử dụn
 
 ## Vị trí quảng cáo
 
-Quảng cáo tắt mặc định; đặt `ADS_ENABLED=true` để bật các script mạng đã cấu hình. Monetag In-Page Push (`12238840`) được nạp toàn site bằng `next/script` với `afterInteractive`; Monetag Vignette (`12238810`) chỉ mount khi dialog tải xuống mở. Adcash Interstitial (`12435318`) được nạp một lần và kích hoạt từ thao tác Analyze/Download, có throttle 30 giây để tránh hiển thị lặp liên tiếp.
+Quảng cáo bật mặc định; đặt `ADS_ENABLED=false` để tắt toàn bộ mạng quảng cáo. Monetag In-Page Push (`12238840`) được nạp toàn site bằng `next/script` với `afterInteractive`; Monetag Vignette (`12238810`) chỉ mount khi dialog tải xuống mở. Adcash Interstitial (`12435318`) được nạp một lần và kích hoạt từ thao tác Analyze/Download, có throttle 30 giây để tránh hiển thị lặp liên tiếp.
 
 Các vị trí Native/Display riêng gồm: banner nhỏ phía trên header, hai rail chỉ trên màn hình rất rộng (từ 1800 px), slot dưới ô nhập link, slot trong dialog tải và Native cuối bài. Header, rail và slot dưới form giữ sẵn kích thước để tránh layout shift và dùng `afterInteractive`; slot nội dung thấp hơn tiếp tục lazy-load bằng `IntersectionObserver`. Mỗi vị trí cần một cặp URL script/container ID riêng; không sao chép container của một zone vào nhiều vị trí. Khi bật ads nhưng chưa cấu hình cặp riêng, một vùng giữ chỗ ẩn vẫn bảo toàn layout. `NEXT_PUBLIC_*` được nhúng vào client build và không phải nơi đặt secret.
 
@@ -119,7 +119,7 @@ Với Next.js, `ADS_ENABLED` được đọc khi prerender các trang. Khi dùng
 | `JOB_TTL` | `1800` | Thời hạn ticket tải (giây) |
 | `RATE_LIMIT_WINDOW` | `60000` | Cửa sổ rate limit (ms) |
 | `RATE_LIMIT_MAX` | `20` | Request tối đa/cửa sổ/IP |
-| `ADS_ENABLED` | `false` | Bật/tắt quảng cáo; đặt `true` trước khi build và khi chạy production |
+| `ADS_ENABLED` | `true` | Bật/tắt quảng cáo; đặt `false` trước khi build để tắt toàn bộ ads |
 | `NEXT_PUBLIC_MONETAG_VIGNETTE_ZONE_ID` | `12238810` | Monetag Vignette khi mở download dialog |
 | `NEXT_PUBLIC_MONETAG_IN_PAGE_PUSH_ZONE_ID` | `12238840` | Monetag In-Page Push toàn site |
 | `NEXT_PUBLIC_ADCASH_INTERSTITIAL_ZONE_ID` | `12435318` | Adcash Interstitial cho Analyze/Download |

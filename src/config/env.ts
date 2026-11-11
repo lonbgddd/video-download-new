@@ -10,7 +10,7 @@ const envSchema = z.object({
   JOB_TTL: z.coerce.number().int().positive().default(1800),
   RATE_LIMIT_WINDOW: z.coerce.number().int().positive().default(60_000),
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(20),
-  ADS_ENABLED: z.enum(["true", "false"]).default("false"),
+  ADS_ENABLED: z.enum(["true", "false"]).default("true"),
   YT_DLP_PATH: z.string().default("yt-dlp"),
   FFMPEG_PATH: z.string().default("ffmpeg"),
   FFPROBE_PATH: z.string().default("ffprobe"),

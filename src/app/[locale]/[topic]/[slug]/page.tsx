@@ -5,6 +5,7 @@ import { JsonLdSchema } from "@/components/seo/JsonLdSchema";
 import { InternalLinkingWidget } from "@/components/navigation/InternalLinkingWidget";
 import { LocaleTopicFooter, LocaleTopicHeader } from "@/components/navigation/LocaleTopicHeader";
 import { AdSlot } from "@/components/ad-slot";
+import { areAdsEnabled } from "@/config/ad-networks";
 import { getLocalizedRoutes, type Locale } from "@/config/i18n.config";
 import { UrlAnalyzer } from "@/features/downloader/url-analyzer";
 import { generateLandingMetadata, getLocalizedRouteByParams } from "@/lib/seo/metadata";
@@ -41,7 +42,7 @@ export default async function LocalizedLandingPage({ params }: LandingPageProps)
   const route = getLocalizedRouteByParams(locale, topic, slug);
   if (!route) notFound();
   const copy = pageCopy[route.locale];
-  const adsEnabled = process.env.ADS_ENABLED === "true";
+  const adsEnabled = areAdsEnabled();
 
   return (
     <>

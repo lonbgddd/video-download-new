@@ -8,6 +8,7 @@ import { GoogleAnalytics } from "@/components/google-analytics";
 import { getLocaleFontClass } from "@/config/fonts";
 import { AdNetworkScripts } from "@/components/ads/ad-network-scripts";
 import { SiteAdPlacements } from "@/components/ads/site-ad-placements";
+import { areAdsEnabled } from "@/config/ad-networks";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -40,5 +41,6 @@ export default async function LocaleLayout({
 }: Readonly<{ children: React.ReactNode; params: Promise<{ locale: string }> }>) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
-  return <html lang={locale} suppressHydrationWarning><body className={getLocaleFontClass(locale)}><Providers><SiteAdPlacements locale={locale}/><div className={`locale-shell locale-${locale}`}>{children}</div></Providers><GoogleAnalytics/><AdNetworkScripts enabled={process.env.ADS_ENABLED === "true"}/></body></html>;
+  const adsEnabled = areAdsEnabled();
+  return <html lang={locale} suppressHydrationWarning><body className={`${getLocaleFontClass(locale)} ${adsEnabled ? "ads-enabled" : ""}`}><Providers><SiteAdPlacements locale={locale}/><div className={`page-with-ad-rails locale-shell locale-${locale}`}>{children}</div></Providers><GoogleAnalytics/><AdNetworkScripts enabled={adsEnabled}/></body></html>;
 }

@@ -7,7 +7,7 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-ARG ADS_ENABLED=false
+ARG ADS_ENABLED=true
 ENV ADS_ENABLED=$ADS_ENABLED
 ARG NEXT_PUBLIC_MONETAG_VIGNETTE_ZONE_ID=12238810
 ARG NEXT_PUBLIC_MONETAG_VIGNETTE_SCRIPT_URL=https://n6wxm.com/vignette.min.js

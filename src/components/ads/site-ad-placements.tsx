@@ -1,9 +1,10 @@
 import { AdSlot } from "@/components/ad-slot";
 import type { Locale } from "@/config/locales";
 import { UI_CONTENT } from "@/config/ui-content";
+import { areAdsEnabled } from "@/config/ad-networks";
 
 export function SiteAdPlacements({ locale }: { locale: Locale }) {
-  if (process.env.ADS_ENABLED !== "true") return null;
+  if (!areAdsEnabled()) return null;
 
   return (
     <>
