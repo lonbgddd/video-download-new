@@ -42,5 +42,5 @@ export default async function LocaleLayout({
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const adsEnabled = areAdsEnabled();
-  return <html lang={locale} suppressHydrationWarning><body className={`${getLocaleFontClass(locale)} ${adsEnabled ? "ads-enabled" : ""}`}><Providers><SiteAdPlacements locale={locale}/><div className={`page-with-ad-rails locale-shell locale-${locale}`}>{children}</div></Providers><GoogleAnalytics/><AdNetworkScripts enabled={adsEnabled}/></body></html>;
+  return <html lang={locale} suppressHydrationWarning><body className={`${getLocaleFontClass(locale)} ${adsEnabled ? "ads-enabled" : ""}`}><Providers locale={locale}><SiteAdPlacements locale={locale}/><div className={`page-with-ad-rails locale-shell locale-${locale}`}>{children}</div><GoogleAnalytics/><AdNetworkScripts enabled={adsEnabled}/></Providers></body></html>;
 }

@@ -33,10 +33,20 @@ describe("localized SEO metadata", () => {
 
   it("includes each localized route and translated sitemap alternates", () => {
     const entries = sitemap();
-    const localizedEntries = entries.filter((entry) => /\/(en|vi|es|ja|fr|pt|ko)\//.test(entry.url));
+    const legalEntries = entries.filter((entry) =>
+      /\/(en|vi|es|ja|fr|pt|ko)\/(privacy|terms|cookies)$/.test(entry.url),
+    );
+    const localizedEntries = entries.filter(
+      (entry) =>
+        /\/(en|vi|es|ja|fr|pt|ko)\//.test(entry.url) &&
+        !legalEntries.includes(entry),
+    );
 
-    expect(entries).toHaveLength(getLocalizedRoutes().length + LOCALES.length + 4);
+    expect(entries).toHaveLength(
+      getLocalizedRoutes().length + LOCALES.length + LOCALES.length * 3 + 2,
+    );
     expect(localizedEntries).toHaveLength(3521);
+    expect(legalEntries).toHaveLength(LOCALES.length * 3);
     const homeEntries = entries.filter((entry) => Object.values(HOME_PATHS).some((path) => entry.url.endsWith(path)));
     expect(homeEntries).toHaveLength(LOCALES.length);
     for (const entry of homeEntries) {
@@ -55,6 +65,14 @@ describe("localized SEO metadata", () => {
         pt: expect.stringContaining("/pt/"),
         ko: expect.stringContaining("/ko/"),
         "x-default": expect.stringContaining("/en/"),
+      });
+    }
+    for (const entry of legalEntries) {
+      expect(entry.alternates?.languages).toMatchObject({
+        ...Object.fromEntries(
+          LOCALES.map((locale) => [locale, expect.stringContaining(`/${locale}/`)]),
+        ),
+        "x-default": expect.stringContaining(`/${DEFAULT_LOCALE}/`),
       });
     }
   });

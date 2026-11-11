@@ -80,13 +80,17 @@ Các chủ đề mới kết hợp 25 loại media với 20 nhu cầu sử dụn
 
 Quảng cáo bật mặc định; đặt `ADS_ENABLED=false` để tắt toàn bộ mạng quảng cáo. Monetag In-Page Push (`12238840`) được nạp toàn site bằng `next/script` với `afterInteractive`; Monetag Vignette (`12238810`) chỉ mount khi dialog tải xuống mở. Adcash Interstitial (`12435318`) được nạp một lần và kích hoạt từ thao tác Analyze/Download, có throttle 30 giây để tránh hiển thị lặp liên tiếp.
 
-Các vị trí Native/Display riêng gồm: banner nhỏ phía trên header, hai rail chỉ trên màn hình rất rộng (từ 1800 px), slot dưới ô nhập link, slot trong dialog tải và Native cuối bài. Header, rail và slot dưới form giữ sẵn kích thước để tránh layout shift và dùng `afterInteractive`; slot nội dung thấp hơn tiếp tục lazy-load bằng `IntersectionObserver`. Mỗi vị trí cần một cặp URL script/container ID riêng; không sao chép container của một zone vào nhiều vị trí. Khi bật ads nhưng chưa cấu hình cặp riêng, một vùng giữ chỗ ẩn vẫn bảo toàn layout. `NEXT_PUBLIC_*` được nhúng vào client build và không phải nơi đặt secret.
+Các vị trí Display gắn cứng gồm: `468×60` phía trên header, `160×300` ở hai rail từ 1280 px, `320×50` dưới ô nhập link và `300×250` trong dialog tải; Native cuối bài vẫn dùng zone riêng. Mỗi tag Display chạy trong iframe cô lập để các biến `atOptions` không ghi đè nhau. Các slot giữ sẵn kích thước để tránh layout shift và chỉ mount phía client.
 
 Social Bar ở giữa bài và Native cuối bài giữ nguyên vị trí hiện tại. Slot Native tùy chọn trong dialog nằm dưới trạng thái/nút tải; Monetag Vignette được mount cùng trạng thái mở của dialog. Hộp thoại có thể cuộn để nút đóng và nội dung vẫn truy cập được. Kiểm tra lại trên thiết bị thật, consent/cookie policy, Core Web Vitals và chính sách của nhà cung cấp trước khi phát hành.
 
 Pop-under hiện dùng khóa `localStorage` để giới hạn một lần trong 24 giờ trên mỗi trình duyệt; chế độ riêng tư hoặc khi storage không khả dụng sẽ không bật pop-under để tránh tần suất không kiểm soát. Không bật thêm auto-placement ngoài các loader/slot đã khai báo nếu cần giữ nguyên tần suất và UX. Các mạng quảng cáo có thể thay đổi creative hoặc hành vi hiển thị; kiểm tra lại trên thiết bị thật trước khi phát hành.
 
-Với Next.js, `ADS_ENABLED` được đọc khi prerender các trang. Khi dùng Docker Compose, chạy lại `docker compose up --build` sau khi đặt biến trong `.env`; với hosting CI/CD, truyền biến này vào cả bước build image lẫn runtime. Khi chạy `npm run dev`, khởi động lại dev server sau khi đổi `.env`.
+Google Analytics và toàn bộ quảng cáo bị chặn mặc định cho đến khi người dùng đồng ý đúng nhóm trong Cookie Preferences. Lựa chọn được lưu 180 ngày; người dùng có thể đổi/rút lại từ footer và Global Privacy Control luôn tắt quảng cáo theo dõi. Với Next.js, `ADS_ENABLED` được đọc khi prerender; thay biến build-time cần build/restart lại ứng dụng.
+
+## Quyền riêng tư và tài liệu pháp lý
+
+Privacy Policy, Terms of Use và Cookie Policy có route riêng cho cả bảy locale (`/{locale}/privacy`, `/{locale}/terms`, `/{locale}/cookies`), metadata/hreflang và sitemap. Route cũ `/privacy`, `/terms`, `/cookies` chuyển sang tiếng Việt. Trước khi production, bắt buộc thay tên pháp nhân, email có người xử lý yêu cầu và địa chỉ đăng ký bằng các biến `NEXT_PUBLIC_LEGAL_*`; văn bản mẫu cần luật sư tại khu vực hoạt động rà soát.
 
 ## Luồng xử lý
 
@@ -120,6 +124,9 @@ Với Next.js, `ADS_ENABLED` được đọc khi prerender các trang. Khi dùng
 | `RATE_LIMIT_WINDOW` | `60000` | Cửa sổ rate limit (ms) |
 | `RATE_LIMIT_MAX` | `20` | Request tối đa/cửa sổ/IP |
 | `ADS_ENABLED` | `true` | Bật/tắt quảng cáo; đặt `false` trước khi build để tắt toàn bộ ads |
+| `NEXT_PUBLIC_LEGAL_OPERATOR_NAME` | `VideoDownloader` | Tên pháp nhân/cá nhân vận hành và kiểm soát dữ liệu |
+| `NEXT_PUBLIC_LEGAL_CONTACT_EMAIL` | `privacy@findtoolpdf.online` | Email tiếp nhận yêu cầu quyền riêng tư |
+| `NEXT_PUBLIC_LEGAL_POSTAL_ADDRESS` | `Vietnam` | Địa chỉ đăng ký đầy đủ của đơn vị vận hành |
 | `NEXT_PUBLIC_MONETAG_VIGNETTE_ZONE_ID` | `12238810` | Monetag Vignette khi mở download dialog |
 | `NEXT_PUBLIC_MONETAG_IN_PAGE_PUSH_ZONE_ID` | `12238840` | Monetag In-Page Push toàn site |
 | `NEXT_PUBLIC_ADCASH_INTERSTITIAL_ZONE_ID` | `12435318` | Adcash Interstitial cho Analyze/Download |

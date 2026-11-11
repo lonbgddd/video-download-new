@@ -10,6 +10,7 @@ import {
 import { getLocalizedPath } from "@/lib/seo/metadata";
 import { HOME_PATHS } from "@/config/locales";
 import { LocaleSwitcher } from "./LocaleSwitcher";
+import { CookiePreferencesButton } from "@/components/privacy/cookie-preferences";
 
 const labels: Record<Locale, { tools: string; video: string; audio: string; home: string; menu: string; language: string }> = {
   en: { tools: "Tools", video: "Video downloads", audio: "Audio tools", home: "Home", menu: "Open tools menu", language: "Choose language" },
@@ -74,6 +75,7 @@ export function LocaleTopicFooter({ locale }: { locale: Locale }) {
       <div className="locale-footer-inner">
         <Link href={HOME_PATHS[locale]}>VideoDownloader</Link>
         <p>{footerCopy[locale]}</p>
+        <nav className="locale-footer-legal"><Link href={`/${locale}/privacy`}>Privacy</Link><Link href={`/${locale}/terms`}>Terms</Link><Link href={`/${locale}/cookies`}>Cookies</Link><CookiePreferencesButton locale={locale}/></nav>
       </div>
     </footer>
   );

@@ -27,5 +27,5 @@ export const viewport: Viewport = {
 
 export default function DefaultRootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const adsEnabled = areAdsEnabled();
-  return <html lang="vi" suppressHydrationWarning><body className={`${getLocaleFontClass("vi")} ${adsEnabled ? "ads-enabled" : ""}`}><Providers><SiteAdPlacements locale="vi"/><div className="page-with-ad-rails">{children}</div></Providers><GoogleAnalytics/><AdNetworkScripts enabled={adsEnabled}/></body></html>;
+  return <html lang="vi" suppressHydrationWarning><body className={`${getLocaleFontClass("vi")} ${adsEnabled ? "ads-enabled" : ""}`}><Providers locale="vi"><SiteAdPlacements locale="vi"/><div className="page-with-ad-rails">{children}</div><GoogleAnalytics/><AdNetworkScripts enabled={adsEnabled}/></Providers></body></html>;
 }

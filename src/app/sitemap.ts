@@ -11,7 +11,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     translations.set(route.locale, route);
     routesByPage.set(route.page.id, translations);
   }
-  const staticRoutes = ["/history", "/terms", "/privacy", "/copyright"].map((route) => ({
+  const staticRoutes = ["/history", "/copyright"].map((route) => ({
     url: getAbsoluteUrl(route),
     lastModified: new Date(),
     changeFrequency: route ? "monthly" as const : "weekly" as const,
@@ -24,6 +24,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 1,
     alternates: { languages: Object.fromEntries([...LOCALES.map((code) => [code, getAbsoluteUrl(HOME_PATHS[code])]), ["x-default", getAbsoluteUrl(HOME_PATHS[DEFAULT_LOCALE])]]) },
   }));
+  const legalEntries = LOCALES.flatMap((locale) =>
+    ["privacy", "terms", "cookies"].map((document) => ({
+      url: getAbsoluteUrl(`/${locale}/${document}`),
+      lastModified: new Date("2026-11-11"),
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+      alternates: {
+        languages: Object.fromEntries([
+          ...LOCALES.map((code) => [code, getAbsoluteUrl(`/${code}/${document}`)]),
+          ["x-default", getAbsoluteUrl(`/${DEFAULT_LOCALE}/${document}`)],
+        ]),
+      },
+    })),
+  );
   const localizedEntries = localizedRoutes.map((route) => ({
     url: getAbsoluteUrl(getLocalizedPath(route)),
     lastModified: new Date(route.page.updatedAt),
@@ -39,5 +53,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
       ),
     },
   }));
-  return [...homeEntries, ...staticRoutes, ...localizedEntries];
+  return [...homeEntries, ...legalEntries, ...staticRoutes, ...localizedEntries];
 }

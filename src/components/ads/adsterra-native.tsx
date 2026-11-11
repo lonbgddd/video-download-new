@@ -8,6 +8,7 @@ import {
   type AdsterraNativePlacement,
 } from "@/config/ad-networks";
 import { AdsterraDisplayBanner } from "@/components/ads/adsterra-display-banner";
+import { useCookieConsent } from "@/privacy/consent-store";
 
 export function AdsterraNative({
   enabled,
@@ -21,6 +22,8 @@ export function AdsterraNative({
   active?: boolean;
 }) {
   const slotRef = useRef<HTMLElement>(null);
+  const consent = useCookieConsent();
+  const advertisingEnabled = enabled && consent?.advertising === true;
   const displayUnit = getAdsterraDisplayUnit(placement);
   const unit = getAdsterraNativeUnit(placement);
   const shouldLoadImmediately = [
@@ -35,7 +38,7 @@ export function AdsterraNative({
   useEffect(() => {
     const slot = slotRef.current;
     if (
-      !enabled ||
+      !advertisingEnabled ||
       !active ||
       shouldLoadImmediately ||
       !unit ||
@@ -52,9 +55,9 @@ export function AdsterraNative({
     }, { rootMargin: "250px 0px" });
     observer.observe(slot);
     return () => observer.disconnect();
-  }, [active, enabled, shouldLoadImmediately, unit]);
+  }, [active, advertisingEnabled, shouldLoadImmediately, unit]);
 
-  if (!enabled || !active || (!unit && !shouldLoadImmediately)) return null;
+  if (!advertisingEnabled || !active || (!unit && !shouldLoadImmediately)) return null;
 
   if (displayUnit) {
     return (

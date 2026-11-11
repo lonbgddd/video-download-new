@@ -5,6 +5,7 @@ import {
   MONETAG_VIGNETTE_SCRIPT_URL,
   MONETAG_VIGNETTE_ZONE_ID,
 } from "@/config/ad-networks";
+import { useCookieConsent } from "@/privacy/consent-store";
 
 /**
  * Mount this component only while an action dialog is open. Next.js loads the
@@ -20,7 +21,8 @@ export function MonetagVignette({
   enabled: boolean;
   active: boolean;
 }) {
-  if (!enabled || !active) return null;
+  const consent = useCookieConsent();
+  if (!enabled || !active || consent?.advertising !== true) return null;
 
   return (
     <Script

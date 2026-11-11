@@ -11,6 +11,10 @@ vi.mock("next/script", () => ({
   }) => <div data-testid="monetag-script" data-src={src} data-zone={zone} />,
 }));
 
+vi.mock("@/privacy/consent-store", () => ({
+  useCookieConsent: () => ({ analytics: false, advertising: true }),
+}));
+
 import { MonetagVignette } from "./monetag-vignette";
 
 describe("MonetagVignette", () => {

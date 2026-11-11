@@ -3,14 +3,17 @@
 import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
 import { ADSTERRA_SOCIAL_BAR_SCRIPT_URL } from "@/config/ad-networks";
+import { useCookieConsent } from "@/privacy/consent-store";
 
 export function AdsterraSocialBar({ enabled }: { enabled: boolean }) {
+  const consent = useCookieConsent();
+  const advertisingEnabled = enabled && consent?.advertising === true;
   const triggerRef = useRef<HTMLDivElement>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
 
   useEffect(() => {
     const trigger = triggerRef.current;
-    if (!enabled || !trigger) return;
+    if (!advertisingEnabled || !trigger) return;
     if (!("IntersectionObserver" in window)) return;
 
     const observer = new IntersectionObserver(([entry]) => {
@@ -20,9 +23,9 @@ export function AdsterraSocialBar({ enabled }: { enabled: boolean }) {
     }, { rootMargin: "250px 0px" });
     observer.observe(trigger);
     return () => observer.disconnect();
-  }, [enabled]);
+  }, [advertisingEnabled]);
 
-  if (!enabled) return null;
+  if (!advertisingEnabled) return null;
 
   return (
     <>
