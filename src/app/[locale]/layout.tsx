@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { notFound } from "next/navigation";
 import { LOCALES, LOCALE_INFO, SITE_NAME, isLocale } from "@/config/i18n.config";
+import { getSiteUrl } from "@/config/site-url";
 import "../globals.css";
 import { Providers } from "../providers";
 
@@ -23,7 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   if (!isLocale(locale)) notFound();
 
   return {
-    metadataBase: new URL(process.env.APP_URL ?? "http://localhost:3000"),
+    metadataBase: getSiteUrl(),
     title: { default: SITE_NAME, template: `%s | ${SITE_NAME}` },
     openGraph: { siteName: SITE_NAME, locale: LOCALE_INFO[locale].ogLocale, type: "website" },
     twitter: { card: "summary" },

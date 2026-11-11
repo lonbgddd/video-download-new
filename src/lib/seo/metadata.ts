@@ -7,8 +7,9 @@ import {
   SITE_NAME,
   type LocalizedRoute,
 } from "@/config/i18n.config";
+import { getSiteUrl } from "@/config/site-url";
 
-const siteUrl = new URL(process.env.APP_URL ?? "http://localhost:3000");
+const siteUrl = getSiteUrl();
 
 export function getAbsoluteUrl(path: string): string {
   return new URL(path.replace(/^\/+/, ""), `${siteUrl.origin}/`).href;

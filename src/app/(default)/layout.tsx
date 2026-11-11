@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
+import { getSiteUrl } from "@/config/site-url";
 import "../globals.css";
 import { Providers } from "../providers";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.APP_URL ?? "http://localhost:3000"),
+  metadataBase: getSiteUrl(),
   title: { default: "VideoDownloader – Tải nội dung công khai", template: "%s | VideoDownloader" },
   description: "Phân tích liên kết media công khai và tải các định dạng hợp lệ mà bạn có quyền sử dụng.",
   openGraph: { title: "VideoDownloader", description: "Công cụ tải media công khai an toàn và minh bạch.", type: "website", locale: "vi_VN" },
