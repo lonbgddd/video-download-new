@@ -3,6 +3,8 @@ import { writeFile } from "node:fs/promises";
 
 const chrome = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const port = 9333;
+const targetUrl = process.env.QA_URL ?? "http://127.0.0.1:4173/";
+const outputPrefix = process.env.QA_OUTPUT_PREFIX ?? "implementation";
 const processHandle = spawn(chrome, [
   "--headless=new", "--disable-gpu", "--hide-scrollbars", `--remote-debugging-port=${port}`,
   "--user-data-dir=/tmp/video-downloader-cdp", "--no-first-run", "about:blank",
@@ -29,7 +31,7 @@ async function capture({ width, height, file, mobile = false }) {
   const send = (method, params = {}) => new Promise((resolve, reject) => { const id = ++sequence; pending.set(id, { resolve, reject }); socket.send(JSON.stringify({ id, method, params })); });
   await send("Page.enable"); await send("Runtime.enable"); await send("Log.enable");
   await send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile, screenWidth: width, screenHeight: height });
-  await send("Page.navigate", { url: "http://127.0.0.1:4173/" }); await wait(1800);
+  await send("Page.navigate", { url: targetUrl }); await wait(1800);
   if (!mobile) {
     await send("Runtime.evaluate", { expression: `(() => { const input = document.querySelector('input[aria-label="URL video"]'); const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set; setter.call(input, 'https://samplelib.com/preview/mp4/sample-5s.mp4'); input.dispatchEvent(new Event('input', { bubbles: true })); document.querySelector('.url-analyzer').requestSubmit(); })()` });
     await wait(6500);
@@ -51,7 +53,7 @@ async function capture({ width, height, file, mobile = false }) {
 
 try {
   await ready();
-  const desktop = await capture({ width: 1536, height: 1024, file: "implementation-desktop-final.png" });
-  const mobile = await capture({ width: 390, height: 844, file: "implementation-mobile-final.png", mobile: true });
+  const desktop = await capture({ width: 1536, height: 1024, file: `${outputPrefix}-desktop.png` });
+  const mobile = await capture({ width: 390, height: 844, file: `${outputPrefix}-mobile.png`, mobile: true });
   console.log(JSON.stringify({ desktop, mobile }, null, 2));
 } finally { processHandle.kill("SIGTERM"); }

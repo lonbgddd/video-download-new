@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { getLocalizedRoutes, LANDING_PAGES, LOCALES } from "@/config/i18n.config";
 import sitemap from "@/app/sitemap";
 import { generateLandingMetadata, getLocalizedPath } from "./metadata";
+import { DEFAULT_LOCALE, HOME_PATHS } from "@/config/locales";
 
 describe("localized SEO metadata", () => {
   it("generates canonical and hreflang URLs for every translation", () => {
@@ -34,8 +35,16 @@ describe("localized SEO metadata", () => {
     const entries = sitemap();
     const localizedEntries = entries.filter((entry) => /\/(en|vi|es|ja|fr|pt|ko)\//.test(entry.url));
 
-    expect(entries).toHaveLength(3526);
+    expect(entries).toHaveLength(getLocalizedRoutes().length + LOCALES.length + 4);
     expect(localizedEntries).toHaveLength(3521);
+    const homeEntries = entries.filter((entry) => Object.values(HOME_PATHS).some((path) => entry.url.endsWith(path)));
+    expect(homeEntries).toHaveLength(LOCALES.length);
+    for (const entry of homeEntries) {
+      expect(entry.alternates?.languages).toMatchObject({
+        ...Object.fromEntries(LOCALES.map((locale) => [locale, expect.stringContaining(HOME_PATHS[locale])])),
+        "x-default": expect.stringContaining(HOME_PATHS[DEFAULT_LOCALE]),
+      });
+    }
     for (const entry of localizedEntries) {
       expect(entry.alternates?.languages).toMatchObject({
         en: expect.stringContaining("/en/"),

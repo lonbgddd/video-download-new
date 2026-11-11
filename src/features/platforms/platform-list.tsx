@@ -1,6 +1,8 @@
 import { SiBilibili, SiDailymotion, SiFacebook, SiInstagram, SiPinterest, SiReddit, SiSoundcloud, SiTiktok, SiTwitch, SiVimeo, SiX, SiYoutube } from "react-icons/si";
 import { Link2 } from "lucide-react";
 import type { IconType } from "react-icons";
+import { UI_CONTENT } from "@/config/ui-content";
+import type { Locale } from "@/config/locales";
 
 const items: Array<{ name: string; Icon: IconType | typeof Link2; className: string; status: string }> = [
   { name: "YouTube", Icon: SiYoutube, className: "youtube", status: "Limited" }, { name: "Facebook", Icon: SiFacebook, className: "facebook", status: "Limited" },
@@ -12,5 +14,5 @@ const items: Array<{ name: string; Icon: IconType | typeof Link2; className: str
   { name: "Direct media", Icon: Link2, className: "direct", status: "Supported" },
 ];
 
-export function PlatformChips() { return <div className="platform-chips" aria-label="Nguồn media"><span className="platform-chip direct"><Link2/> Link trực tiếp <small>Supported</small></span>{items.slice(0, 5).map(({ name, Icon, className }) => <span className={`platform-chip ${className}`} key={name}><Icon/> {name} <small>Limited</small></span>)}</div>; }
-export function PlatformStrip() { return <section className="platform-strip" id="platforms"><h2>Hỗ trợ nhiều nguồn phổ biến</h2><div className="platform-logo-row">{items.map(({ name, Icon, className, status }) => <div className="platform-logo" key={name} title={`${name}: ${status}`}><Icon className={className}/><span>{name}</span><small className={status === "Supported" ? "supported" : "limited"}>{status}</small></div>)}</div></section>; }
+export function PlatformChips({ locale }: { locale: Locale }) { const copy = UI_CONTENT[locale].platform; return <div className="platform-chips" aria-label={copy.source}><span className="platform-chip direct"><Link2/> {copy.direct} <small>{copy.supported}</small></span>{items.slice(0, 5).map(({ name, Icon, className }) => <span className={`platform-chip ${className}`} key={name}><Icon/> {name} <small>{copy.limited}</small></span>)}</div>; }
+export function PlatformStrip({ locale }: { locale: Locale }) { const copy = UI_CONTENT[locale].platform; return <section className="platform-strip" id="platforms"><h2>{copy.title}</h2><div className="platform-logo-row">{items.map(({ name, Icon, className, status }) => { const displayName = className === "direct" ? copy.direct : name; return <div className="platform-logo" key={name} title={`${displayName}: ${status === "Supported" ? copy.supported : copy.limited}`}><Icon className={className}/><span>{displayName}</span><small className={status === "Supported" ? "supported" : "limited"}>{status === "Supported" ? copy.supported : copy.limited}</small></div>; })}</div></section>; }

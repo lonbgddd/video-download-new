@@ -3,8 +3,9 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { UrlAnalyzer } from "./url-analyzer";
+import type { Locale } from "@/config/locales";
 
-function renderAnalyzer() { return render(<QueryClientProvider client={new QueryClient()}><UrlAnalyzer/></QueryClientProvider>); }
+function renderAnalyzer(locale: Locale = "vi") { return render(<QueryClientProvider client={new QueryClient()}><UrlAnalyzer locale={locale}/></QueryClientProvider>); }
 afterEach(() => vi.unstubAllGlobals());
 describe("UrlAnalyzer", () => {
   it("shows a validation message for an invalid URL", async () => {
@@ -12,6 +13,13 @@ describe("UrlAnalyzer", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("URL hợp lệ");
   });
   it("renders the honest empty state", () => { renderAnalyzer(); expect(screen.getByText("Kết quả tải xuống sẽ xuất hiện tại đây")).toBeInTheDocument(); });
+  it("renders the complete analyzer state in the selected language", () => {
+    renderAnalyzer("en");
+    expect(screen.getByLabelText("Video URL")).toHaveAttribute("placeholder", "Paste a video link here...");
+    expect(screen.getByRole("button", { name: "Analyze" })).toBeInTheDocument();
+    expect(screen.getByText("Your download options will appear here")).toBeInTheDocument();
+    expect(screen.queryByText("Kết quả tải xuống sẽ xuất hiện tại đây")).not.toBeInTheDocument();
+  });
   it("opens a validated direct stream in a new tab for long videos", async () => {
     const tab = { opener: window, location: { replace: vi.fn() }, close: vi.fn() };
     const fetchMock = vi.fn()

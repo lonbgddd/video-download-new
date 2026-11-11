@@ -11,6 +11,12 @@ export const LOCALE_INFO: Record<Locale, { name: string; nativeName: string; ogL
   ko: { name: "Korean", nativeName: "한국어", ogLocale: "ko_KR" },
 };
 
+export const DEFAULT_LOCALE: Locale = "vi";
+
+export const HOME_PATHS: Record<Locale, string> = Object.fromEntries(
+  LOCALES.map((locale) => [locale, `/${locale}`]),
+) as Record<Locale, string>;
+
 export const DEFAULT_LANDING_PATHS: Record<Locale, string> = {
   en: "/en/video-downloader/fast-free-video-downloader",
   vi: "/vi/cong-cu-tai-video/tai-video-cong-khai-nhanh",

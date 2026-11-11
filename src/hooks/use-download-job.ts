@@ -4,7 +4,7 @@ import type { DownloadJob } from "@/types/media";
 
 type PublicJob = Omit<DownloadJob, "downloadToken"> & { downloadUrl?: string };
 
-export function useDownloadJob(jobId?: string) {
+export function useDownloadJob(jobId?: string, fallbackError = "Không thể theo dõi tiến trình.") {
   const [job, setJob] = useState<PublicJob>(); const [error, setError] = useState<string>();
   useEffect(() => {
     if (!jobId) return;
@@ -15,9 +15,9 @@ export function useDownloadJob(jobId?: string) {
         if (!payload.success) throw new Error(payload.error.message);
         if (!active) return; setJob(payload.data.job);
         if (!["completed", "failed", "expired"].includes(payload.data.job.status)) timer = setTimeout(poll, 1000);
-      } catch (reason) { if (active) setError(reason instanceof Error ? reason.message : "Không thể theo dõi tiến trình."); }
+      } catch { if (active) setError(fallbackError); }
     };
     void poll(); return () => { active = false; clearTimeout(timer); };
-  }, [jobId]);
+  }, [fallbackError, jobId]);
   return { job, error };
 }

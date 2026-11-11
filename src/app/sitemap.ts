@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getLocalizedRoutes, LOCALES } from "@/config/i18n.config";
 import { getAbsoluteUrl, getLocalizedPath } from "@/lib/seo/metadata";
+import { DEFAULT_LOCALE, HOME_PATHS } from "@/config/locales";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const localizedRoutes = getLocalizedRoutes();
@@ -10,11 +11,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     translations.set(route.locale, route);
     routesByPage.set(route.page.id, translations);
   }
-  const staticRoutes = ["", "/history", "/terms", "/privacy", "/copyright"].map((route) => ({
+  const staticRoutes = ["/history", "/terms", "/privacy", "/copyright"].map((route) => ({
     url: getAbsoluteUrl(route),
     lastModified: new Date(),
     changeFrequency: route ? "monthly" as const : "weekly" as const,
-    priority: route ? 0.6 : 1,
+    priority: 0.6,
+  }));
+  const homeEntries = LOCALES.map((locale) => ({
+    url: getAbsoluteUrl(HOME_PATHS[locale]),
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 1,
+    alternates: { languages: Object.fromEntries([...LOCALES.map((code) => [code, getAbsoluteUrl(HOME_PATHS[code])]), ["x-default", getAbsoluteUrl(HOME_PATHS[DEFAULT_LOCALE])]]) },
   }));
   const localizedEntries = localizedRoutes.map((route) => ({
     url: getAbsoluteUrl(getLocalizedPath(route)),
@@ -31,5 +39,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
       ),
     },
   }));
-  return [...staticRoutes, ...localizedEntries];
+  return [...homeEntries, ...staticRoutes, ...localizedEntries];
 }

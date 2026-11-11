@@ -8,6 +8,7 @@ import {
   type Locale,
 } from "@/config/i18n.config";
 import { getLocalizedPath } from "@/lib/seo/metadata";
+import { HOME_PATHS } from "@/config/locales";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 
 const labels: Record<Locale, { tools: string; video: string; audio: string; home: string; menu: string; language: string }> = {
@@ -33,7 +34,7 @@ export function LocaleTopicHeader({ locale, currentPageId }: { locale: Locale; c
   return (
     <header className="locale-header">
       <div className="locale-header-inner">
-        <Link className="locale-brand" href={current ? getLocalizedPath(current) : "/"} aria-label={`${labels[locale].home} - VideoDownloader`}>
+        <Link className="locale-brand" href={HOME_PATHS[locale]} aria-label={`${labels[locale].home} - VideoDownloader`}>
           <span className="locale-brand-icon"><Download size={19} aria-hidden="true" /></span>
           <span>VideoDownloader</span>
         </Link>
@@ -59,7 +60,6 @@ export function LocaleTopicHeader({ locale, currentPageId }: { locale: Locale; c
 }
 
 export function LocaleTopicFooter({ locale }: { locale: Locale }) {
-  const localizedHome = getLocalizedRoutesForLocale(locale)[0];
   const footerCopy: Record<Locale, string> = {
     en: "Use this service only with media you own or are authorized to save.",
     vi: "Chỉ sử dụng dịch vụ với nội dung bạn sở hữu hoặc được phép lưu.",
@@ -72,7 +72,7 @@ export function LocaleTopicFooter({ locale }: { locale: Locale }) {
   return (
     <footer className="locale-footer">
       <div className="locale-footer-inner">
-        <Link href={localizedHome ? getLocalizedPath(localizedHome) : "/"}>VideoDownloader</Link>
+        <Link href={HOME_PATHS[locale]}>VideoDownloader</Link>
         <p>{footerCopy[locale]}</p>
       </div>
     </footer>

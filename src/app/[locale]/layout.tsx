@@ -5,6 +5,9 @@ import { LOCALES, LOCALE_INFO, SITE_NAME, isLocale } from "@/config/i18n.config"
 import { getSiteUrl } from "@/config/site-url";
 import "../globals.css";
 import { Providers } from "../providers";
+import { GoogleAnalytics } from "@/components/google-analytics";
+import { getLocaleFontClass } from "@/config/fonts";
+import { AdNetworkScripts } from "@/components/ads/ad-network-scripts";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -37,5 +40,5 @@ export default async function LocaleLayout({
 }: Readonly<{ children: React.ReactNode; params: Promise<{ locale: string }> }>) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
-  return <html lang={locale} suppressHydrationWarning><body><Providers><div className={`locale-shell locale-${locale}`}>{children}</div></Providers><Script src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5107605542667246" strategy="beforeInteractive" crossOrigin="anonymous" /></body></html>;
+  return <html lang={locale} suppressHydrationWarning><body className={getLocaleFontClass(locale)}><Providers><div className={`locale-shell locale-${locale}`}>{children}</div></Providers><GoogleAnalytics/><AdNetworkScripts enabled={process.env.ADS_ENABLED === "true"}/><Script src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5107605542667246" strategy="lazyOnload" crossOrigin="anonymous" /></body></html>;
 }

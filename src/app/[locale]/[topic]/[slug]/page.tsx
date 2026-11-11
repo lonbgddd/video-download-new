@@ -66,7 +66,7 @@ export default async function LocalizedLandingPage({ params }: LandingPageProps)
             <h2 id="seo-tool-title">
               {copy.checkLink}
             </h2>
-            <UrlAnalyzer />
+            <UrlAnalyzer locale={route.locale} />
           </section>
 
           <section className="seo-section" aria-labelledby="seo-steps-title">
