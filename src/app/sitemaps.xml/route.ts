@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
+import { getSiteUrl } from "@/config/site-url";
 
-export function GET(request: Request) {
-  return NextResponse.redirect(new URL("/sitemap.xml", request.url), 308);
+export function GET() {
+  return NextResponse.redirect(new URL("/sitemap.xml", getSiteUrl()), 308);
 }
