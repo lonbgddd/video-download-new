@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
 import { notFound } from "next/navigation";
 import { LOCALES, LOCALE_INFO, SITE_NAME, isLocale } from "@/config/i18n.config";
 import { getSiteUrl } from "@/config/site-url";
@@ -40,5 +39,5 @@ export default async function LocaleLayout({
 }: Readonly<{ children: React.ReactNode; params: Promise<{ locale: string }> }>) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
-  return <html lang={locale} suppressHydrationWarning><body className={getLocaleFontClass(locale)}><Providers><div className={`locale-shell locale-${locale}`}>{children}</div></Providers><GoogleAnalytics/><AdNetworkScripts enabled={process.env.ADS_ENABLED === "true"}/><Script src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5107605542667246" strategy="lazyOnload" crossOrigin="anonymous" /></body></html>;
+  return <html lang={locale} suppressHydrationWarning><body className={getLocaleFontClass(locale)}><Providers><div className={`locale-shell locale-${locale}`}>{children}</div></Providers><GoogleAnalytics/><AdNetworkScripts enabled={process.env.ADS_ENABLED === "true"}/></body></html>;
 }
