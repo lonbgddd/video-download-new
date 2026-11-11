@@ -7,7 +7,7 @@
 - Node.js 22+
 - npm 10+
 - FFmpeg/FFprobe cho các tác vụ media
-- `yt-dlp` nếu muốn bật các nguồn platform ở trạng thái Limited
+- `yt-dlp[default]` và Node.js 22+ làm JavaScript runtime nếu muốn tải YouTube
 
 Link trực tiếp tới `.mp4`, `.webm`, `.mov`, `.m4v`, `.mp3`, `.m4a`, `.ogg`, `.wav` hoạt động với extractor tích hợp sẵn. YouTube, Facebook, TikTok, Instagram, X, Vimeo, Dailymotion và Twitch cần `yt-dlp` trên PATH và chỉ dành cho nội dung công khai hợp lệ.
 
@@ -19,7 +19,7 @@ npm install
 npm run dev
 ```
 
-Mở `http://localhost:3000`. Cài FFmpeg trên macOS bằng `brew install ffmpeg`; cài yt-dlp theo hướng dẫn chính thức của dự án. Nếu binary nằm ngoài PATH, chỉnh `FFMPEG_PATH`, `FFPROBE_PATH`, `YT_DLP_PATH`.
+Mở `http://localhost:3000`. Cài FFmpeg trên macOS bằng `brew install ffmpeg`; cài yt-dlp kèm EJS bằng `python3 -m pip install -U "yt-dlp[default]"` (hoặc bản standalone chính thức). Ứng dụng dùng Node.js 22+ qua `--js-runtimes node` để xử lý challenge YouTube. Nếu binary nằm ngoài PATH, chỉnh `FFMPEG_PATH`, `FFPROBE_PATH`, `YT_DLP_PATH`.
 
 ## Kiểm tra chất lượng
 

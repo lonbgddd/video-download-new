@@ -10,6 +10,10 @@ import { validatePublicUrl } from "@/services/security/url-validator";
 
 const mediaExtensions = new Set([".mp4", ".webm", ".mov", ".m4v", ".mp3", ".m4a", ".ogg", ".wav"]);
 const allowedMime = /^(video|audio)\//;
+const fallbackMime: Record<string, string> = {
+  ".mp4": "video/mp4", ".m4v": "video/mp4", ".webm": "video/webm", ".mov": "video/quicktime",
+  ".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".ogg": "audio/ogg", ".wav": "audio/wav",
+};
 
 async function safeFetch(url: URL, init: RequestInit, redirects = 0): Promise<Response> {
   if (redirects > 3) throw new AppError("INVALID_URL", "Too many redirects");
@@ -28,11 +32,19 @@ export class DirectMediaExtractor implements MediaExtractor {
   supports(url: URL) { return mediaExtensions.has(path.extname(url.pathname).toLowerCase()); }
 
   async getMetadata(url: URL, signal?: AbortSignal) {
-    const response = await safeFetch(url, { method: "HEAD", signal });
+    let response = await safeFetch(url, { method: "HEAD", signal });
+    const headMime = response.headers.get("content-type")?.split(";")[0].trim().toLowerCase();
+    if (!response.ok || (!allowedMime.test(headMime ?? "") && headMime !== "application/octet-stream")) {
+      response = await safeFetch(url, { method: "GET", headers: { Range: "bytes=0-0" }, signal });
+    }
     if (!response.ok) throw new AppError("MEDIA_NOT_FOUND", "Media not found", 404);
-    const mimeType = response.headers.get("content-type")?.split(";")[0] ?? "application/octet-stream";
-    if (!allowedMime.test(mimeType)) throw new AppError("UNSUPPORTED_PLATFORM", "Not a media URL");
-    const fileSize = Number(response.headers.get("content-length") ?? 0) || undefined;
+    const responseMime = response.headers.get("content-type")?.split(";")[0].trim().toLowerCase() ?? "";
+    const inferredMime = fallbackMime[path.extname(url.pathname).toLowerCase()];
+    const mimeType = allowedMime.test(responseMime) ? responseMime : inferredMime;
+    if (!mimeType) throw new AppError("UNSUPPORTED_PLATFORM", "Not a media URL");
+    const contentRangeSize = response.headers.get("content-range")?.match(/\/(\d+)$/)?.[1];
+    const fileSize = Number(contentRangeSize ?? response.headers.get("content-length") ?? 0) || undefined;
+    if (response.body) await response.body.cancel().catch(() => undefined);
     if (fileSize && fileSize > env.MAX_FILE_SIZE) throw new AppError("FILE_TOO_LARGE", "Media exceeds configured size", 413);
     const rawName = decodeURIComponent(path.basename(url.pathname) || "media");
     return { title: rawName.replace(path.extname(rawName), "").replace(/[-_]+/g, " "), platform: "direct" as const, sourceUrl: url.href, formats: [this.makeFormat(url, mimeType, fileSize)] };
@@ -46,11 +58,11 @@ export class DirectMediaExtractor implements MediaExtractor {
     return { id: `direct-${extension}`, type, label: type === "video" ? "Chất lượng gốc" : "Âm thanh gốc", extension, mimeType, fileSize, hasAudio: true };
   }
 
-  async download(url: URL, _formatId: string, outputPath: string, signal?: AbortSignal) {
+  async download(url: URL, _format: MediaFormat, outputPath: string, signal?: AbortSignal) {
     const response = await safeFetch(url, { signal });
     if (!response.ok || !response.body) throw new AppError("MEDIA_NOT_FOUND", "Download source unavailable");
     const mime = response.headers.get("content-type") ?? "";
-    if (!allowedMime.test(mime)) throw new AppError("PROCESSING_FAILED", "Unexpected MIME type");
+    if (!allowedMime.test(mime) && mime.split(";", 1)[0].trim().toLowerCase() !== "application/octet-stream") throw new AppError("PROCESSING_FAILED", "Unexpected MIME type");
     let total = 0;
     const limiter = new Transform({ transform(chunk, _encoding, callback) {
       total += chunk.length;

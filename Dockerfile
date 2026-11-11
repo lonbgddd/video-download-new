@@ -13,7 +13,7 @@ RUN npm run build
 FROM node:22-alpine AS runner
 WORKDIR /app
 RUN apk add --no-cache ffmpeg python3 py3-pip \
-  && pip3 install --no-cache-dir --break-system-packages yt-dlp \
+  && pip3 install --no-cache-dir --break-system-packages "yt-dlp[default]" \
   && addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nextjs \
   && mkdir -p /tmp/video-downloader \

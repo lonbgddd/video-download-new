@@ -7,7 +7,7 @@ export interface MediaExtractor {
   supports(url: URL): boolean;
   getMetadata(url: URL, signal?: AbortSignal): Promise<ExtractedMetadata>;
   getFormats(url: URL, signal?: AbortSignal): Promise<MediaFormat[]>;
-  download?(url: URL, formatId: string, outputPath: string, signal?: AbortSignal): Promise<void>;
+  download?(url: URL, format: MediaFormat, outputPath: string, signal?: AbortSignal): Promise<void>;
 }
 
 export type ExtractorPlatform = PlatformId;

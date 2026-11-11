@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import path from "node:path";
 import type { MediaExtractor } from "./media-extractor";
 import type { MediaFormat, PlatformId } from "@/types/media";
 import { detectPlatform } from "@/config/platforms";
@@ -13,10 +14,31 @@ function run(binary: string, args: string[], signal?: AbortSignal): Promise<stri
     const child = spawn(binary, args, { stdio: ["ignore", "pipe", "pipe"], signal, shell: false });
     let stdout = ""; let stderr = "";
     child.stdout.on("data", (chunk) => { stdout += chunk; if (stdout.length > 10_000_000) child.kill(); });
-    child.stderr.on("data", (chunk) => { stderr += chunk; });
-    child.once("error", (error) => reject(error));
+    child.stderr.on("data", (chunk) => { stderr = (stderr + chunk).slice(-20_000); });
+    child.once("error", (error: NodeJS.ErrnoException) => reject(new AppError("PROCESSING_FAILED", error.code === "ENOENT" ? `Không tìm thấy yt-dlp tại ${binary}` : error.message)));
     child.once("close", (code) => code === 0 ? resolve(stdout) : reject(new AppError("PROCESSING_FAILED", stderr.slice(-600) || `Extractor exited ${code}`)));
   });
+}
+
+const baseArgs = ["--no-playlist", "--no-warnings", "--js-runtimes", "node"];
+
+export function buildYtDlpDownloadArgs(format: MediaFormat, outputPath: string, url: URL) {
+  let selector = format.id;
+  if (format.type === "video" && !format.hasAudio) {
+    const preferredAudio = format.extension === "webm" ? "bestaudio[ext=webm]" : "bestaudio[ext=m4a]";
+    selector = `${format.id}+${preferredAudio}/${format.id}+bestaudio/${format.id}`;
+  }
+  const args = [
+    ...baseArgs,
+    "--max-filesize", String(env.MAX_FILE_SIZE),
+    "--format", selector,
+    "--output", outputPath,
+    "--no-part",
+  ];
+  if (path.isAbsolute(env.FFMPEG_PATH)) args.push("--ffmpeg-location", env.FFMPEG_PATH);
+  if (format.type === "video" && !format.hasAudio) args.push("--merge-output-format", format.extension);
+  args.push("--", url.href);
+  return args;
 }
 
 function normalizeFormat(format: YtDlpFormat): MediaFormat | null {
@@ -37,7 +59,7 @@ export class YtDlpExtractor implements MediaExtractor {
   readonly name = "yt-dlp";
   supports(url: URL) { return detectPlatform(url.hostname) !== "other" && detectPlatform(url.hostname) !== "direct"; }
   private async read(url: URL, signal?: AbortSignal): Promise<YtDlpJson> {
-    const raw = await run(env.YT_DLP_PATH, ["--dump-single-json", "--no-playlist", "--skip-download", "--no-warnings", "--", url.href], signal);
+    const raw = await run(env.YT_DLP_PATH, ["--dump-single-json", ...baseArgs, "--skip-download", "--", url.href], signal);
     const data = JSON.parse(raw) as YtDlpJson;
     if (data.is_live) throw new AppError("RESTRICTED_MEDIA", "Live streams are not supported");
     if ((data.duration ?? 0) > env.MAX_MEDIA_DURATION) throw new AppError("MEDIA_TOO_LONG", "Media exceeds duration limit");
@@ -48,7 +70,7 @@ export class YtDlpExtractor implements MediaExtractor {
     return { title: data.title, thumbnail: data.thumbnail, duration: data.duration, author: data.uploader, platform: detectPlatform(url.hostname) as PlatformId, sourceUrl: url.href, formats: (data.formats ?? []).map(normalizeFormat).filter((item): item is MediaFormat => Boolean(item)).filter((item) => !item.fileSize || item.fileSize <= env.MAX_FILE_SIZE) };
   }
   async getFormats(url: URL, signal?: AbortSignal) { return (await this.getMetadata(url, signal)).formats ?? []; }
-  async download(url: URL, formatId: string, outputPath: string, signal?: AbortSignal) {
-    await run(env.YT_DLP_PATH, ["--no-playlist", "--max-filesize", String(env.MAX_FILE_SIZE), "--format", formatId, "--output", outputPath, "--", url.href], signal);
+  async download(url: URL, format: MediaFormat, outputPath: string, signal?: AbortSignal) {
+    await run(env.YT_DLP_PATH, buildYtDlpDownloadArgs(format, outputPath, url), signal);
   }
 }
