@@ -3,9 +3,11 @@
 import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
 import {
+  getAdsterraDisplayUnit,
   getAdsterraNativeUnit,
   type AdsterraNativePlacement,
 } from "@/config/ad-networks";
+import { AdsterraDisplayBanner } from "@/components/ads/adsterra-display-banner";
 
 export function AdsterraNative({
   enabled,
@@ -19,12 +21,14 @@ export function AdsterraNative({
   active?: boolean;
 }) {
   const slotRef = useRef<HTMLElement>(null);
+  const displayUnit = getAdsterraDisplayUnit(placement);
   const unit = getAdsterraNativeUnit(placement);
   const shouldLoadImmediately = [
     "above-header",
     "side-left",
     "side-right",
     "near-input",
+    "download-modal",
   ].includes(placement);
   const [shouldLoad, setShouldLoad] = useState(shouldLoadImmediately);
 
@@ -50,7 +54,25 @@ export function AdsterraNative({
     return () => observer.disconnect();
   }, [active, enabled, shouldLoadImmediately, unit]);
 
-  if (!enabled || (!unit && !shouldLoadImmediately)) return null;
+  if (!enabled || !active || (!unit && !shouldLoadImmediately)) return null;
+
+  if (displayUnit) {
+    return (
+      <aside
+        className={`ad-slot adsterra-native-slot adsterra-display-slot ad-placement-${placement}`}
+        aria-label={label}
+        data-ad-network="adsterra-display"
+        data-ad-placement={placement}
+        data-ad-state="configured"
+      >
+        <span className="ad-disclosure">{label}</span>
+        <AdsterraDisplayBanner
+          unit={displayUnit}
+          title={`${label} ${displayUnit.width} × ${displayUnit.height}`}
+        />
+      </aside>
+    );
+  }
 
   return (
     <aside

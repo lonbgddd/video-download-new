@@ -23,10 +23,66 @@ type AdsterraNativeUnit = {
   containerId: string;
 };
 
+export type AdsterraDisplayUnit = {
+  key: string;
+  scriptUrl: string;
+  width: number;
+  height: number;
+};
+
 // Ads are enabled by default for this ad-supported site. Set ADS_ENABLED=false
 // explicitly in local/CI/production environments to disable every network.
 export function areAdsEnabled(): boolean {
   return process.env.ADS_ENABLED !== "false";
+}
+
+// Fixed Adsterra iframe banners supplied for this site. They intentionally run
+// inside isolated iframe documents because every Adsterra tag writes to the
+// same global `atOptions` variable.
+const ADSTERRA_DISPLAY_UNITS: Partial<
+  Record<AdsterraNativePlacement, AdsterraDisplayUnit>
+> = {
+  "above-header": {
+    key: "98e35b0413ed2eff342f2f8566bedf6a",
+    scriptUrl:
+      "https://bellnewyork.org/22/98e35b0413ed2eff342f2f8566bedf6a",
+    width: 468,
+    height: 60,
+  },
+  "side-left": {
+    key: "58dc13d1a3ef5c59e24c0db82e73cae7",
+    scriptUrl:
+      "https://bellnewyork.org/22/58dc13d1a3ef5c59e24c0db82e73cae7",
+    width: 160,
+    height: 300,
+  },
+  "side-right": {
+    key: "58dc13d1a3ef5c59e24c0db82e73cae7",
+    scriptUrl:
+      "https://bellnewyork.org/22/58dc13d1a3ef5c59e24c0db82e73cae7",
+    width: 160,
+    height: 300,
+  },
+  "near-input": {
+    key: "4566b019213ecce8b1b81d34c8b78ffe",
+    scriptUrl:
+      "https://bellnewyork.org/22/4566b019213ecce8b1b81d34c8b78ffe",
+    width: 320,
+    height: 50,
+  },
+  "download-modal": {
+    key: "8f54c5f9daa036076b1acff3dae9ba87",
+    scriptUrl:
+      "https://bellnewyork.org/22/8f54c5f9daa036076b1acff3dae9ba87",
+    width: 300,
+    height: 250,
+  },
+};
+
+export function getAdsterraDisplayUnit(
+  placement: AdsterraNativePlacement,
+): AdsterraDisplayUnit | undefined {
+  return ADSTERRA_DISPLAY_UNITS[placement];
 }
 
 const ADSTERRA_NATIVE_PLACEMENTS: Record<

@@ -132,9 +132,11 @@ button { color: inherit; }
 .ad-slot-placeholder { width: 100%; min-height: inherit; display: grid; place-content: center; gap: 4px; color: var(--muted); text-align: center; background: repeating-linear-gradient(135deg, transparent 0 10px, color-mix(in srgb, var(--border) 34%, transparent) 10px 11px); }
 .ad-slot-placeholder span { font-size: 12px; font-weight: 750; text-transform: uppercase; letter-spacing: .08em; }
 .ad-slot-placeholder small { font-size: 10px; }
+.adsterra-display-slot { place-items: center; }
+.adsterra-display-frame, .adsterra-display-reserved { display: block; flex: 0 0 auto; max-width: 100%; margin: auto; border: 0; background: transparent; }
 .ad-placement-above-header { width: min(100% - 24px, 970px); min-height: 106px; margin: 8px auto; }
 .ad-placement-near-input { max-width: 970px; min-height: 106px; margin: 16px auto 0; }
-.ad-placement-download-modal { min-height: 106px; margin: 24px 0 0; }
+.ad-placement-download-modal { min-height: 286px; margin: 24px 0 0; }
 .ad-side-rails:empty { display: none; }
 .ad-placement-side-left, .ad-placement-side-right { position: fixed; top: 50%; z-index: 20; width: 160px; height: min(600px, calc(100dvh - 32px)); min-height: 0; margin: 0; transform: translateY(-50%); }
 .ad-placement-side-left > div, .ad-placement-side-right > div { flex: 1; min-height: 0; }
