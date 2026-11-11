@@ -17,6 +17,7 @@ import { analytics } from "@/services/analytics/analytics-adapter";
 import { motion } from "framer-motion";
 import { UI_CONTENT } from "@/config/ui-content";
 import type { Locale } from "@/config/locales";
+import { requestAdcashInterstitial } from "@/components/ads/adcash-interstitial";
 
 type Tab = "video" | "audio" | "thumbnail";
 const videoLabels: Record<Locale, string> = { vi: "Video", en: "Video", es: "Vídeo", fr: "Vidéo", pt: "Vídeo", ja: "動画", ko: "동영상" };
@@ -54,6 +55,7 @@ export function MediaResult({
   };
   const startDownload = async () => {
     if (!chosen) return;
+    if (adsEnabled) requestAdcashInterstitial("download-submit");
     setCreating(true);
     analytics.track("download_started", { type: tab, format: chosen.id });
     try {

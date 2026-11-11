@@ -78,11 +78,13 @@ Các chủ đề mới kết hợp 25 loại media với 20 nhu cầu sử dụn
 
 ## Vị trí quảng cáo
 
-Quảng cáo tắt mặc định; đặt `ADS_ENABLED=true` để bật các script mạng đã cấu hình. Các vị trí Native riêng gồm: banner nhỏ phía trên header, hai rail chỉ trên màn hình rất rộng (từ 1800 px), slot dưới ô nhập link, slot trong dialog tải và Native cuối bài. Mỗi slot mới chỉ tải khi gần vùng nhìn thấy (`IntersectionObserver`) và cần một cặp URL script/container ID riêng; không sao chép container của một zone vào nhiều vị trí. Nếu chưa cấu hình cặp riêng, vị trí đó sẽ không render. `NEXT_PUBLIC_ADSTERRA_*` được nhúng vào client build và không phải nơi đặt secret.
+Quảng cáo tắt mặc định; đặt `ADS_ENABLED=true` để bật các script mạng đã cấu hình. Monetag In-Page Push (`12238840`) được nạp toàn site bằng `next/script` với `afterInteractive`; Monetag Vignette (`12238810`) chỉ mount khi dialog tải xuống mở. Adcash Interstitial (`12435318`) được nạp một lần và kích hoạt từ thao tác Analyze/Download, có throttle 30 giây để tránh hiển thị lặp liên tiếp.
 
-Social Bar/Monetag ở giữa bài và Native cuối bài giữ nguyên vị trí hiện tại. Slot trong dialog nằm dưới trạng thái/nút tải và chỉ tải khi dialog mở; hộp thoại có thể cuộn để nút đóng và nội dung vẫn truy cập được. Các slot giữ chiều cao dự kiến để hạn chế layout shift. Kiểm tra lại trên thiết bị thật, consent/cookie policy, Core Web Vitals và chính sách của nhà cung cấp trước khi phát hành.
+Các vị trí Native/Display riêng gồm: banner nhỏ phía trên header, hai rail chỉ trên màn hình rất rộng (từ 1800 px), slot dưới ô nhập link, slot trong dialog tải và Native cuối bài. Header, rail và slot dưới form giữ sẵn kích thước để tránh layout shift và dùng `afterInteractive`; slot nội dung thấp hơn tiếp tục lazy-load bằng `IntersectionObserver`. Mỗi vị trí cần một cặp URL script/container ID riêng; không sao chép container của một zone vào nhiều vị trí. Khi bật ads nhưng chưa cấu hình cặp riêng, một vùng giữ chỗ ẩn vẫn bảo toàn layout. `NEXT_PUBLIC_*` được nhúng vào client build và không phải nơi đặt secret.
 
-Pop-under hiện dùng khóa `localStorage` để giới hạn một lần trong 24 giờ trên mỗi trình duyệt; chế độ riêng tư hoặc khi storage không khả dụng sẽ không bật pop-under để tránh tần suất không kiểm soát. Social Bar, Native Banner và Monetag zone `308758` dùng cấu hình trong `src/config/ad-networks.ts`. Script Monetag chỉ được tải khi cuộn tới vị trí giữa nội dung (`IntersectionObserver`, vùng đệm 250 px). Không bật đồng thời auto-placement bên ngoài các slot này nếu cần giữ nguyên vị trí và UX đã mô tả. Các mạng quảng cáo có thể thay đổi creative hoặc hành vi hiển thị; kiểm tra lại trên thiết bị thật, consent/cookie policy, Core Web Vitals và chính sách của nhà cung cấp trước khi phát hành.
+Social Bar ở giữa bài và Native cuối bài giữ nguyên vị trí hiện tại. Slot Native tùy chọn trong dialog nằm dưới trạng thái/nút tải; Monetag Vignette được mount cùng trạng thái mở của dialog. Hộp thoại có thể cuộn để nút đóng và nội dung vẫn truy cập được. Kiểm tra lại trên thiết bị thật, consent/cookie policy, Core Web Vitals và chính sách của nhà cung cấp trước khi phát hành.
+
+Pop-under hiện dùng khóa `localStorage` để giới hạn một lần trong 24 giờ trên mỗi trình duyệt; chế độ riêng tư hoặc khi storage không khả dụng sẽ không bật pop-under để tránh tần suất không kiểm soát. Không bật thêm auto-placement ngoài các loader/slot đã khai báo nếu cần giữ nguyên tần suất và UX. Các mạng quảng cáo có thể thay đổi creative hoặc hành vi hiển thị; kiểm tra lại trên thiết bị thật trước khi phát hành.
 
 Với Next.js, `ADS_ENABLED` được đọc khi prerender các trang. Khi dùng Docker Compose, chạy lại `docker compose up --build` sau khi đặt biến trong `.env`; với hosting CI/CD, truyền biến này vào cả bước build image lẫn runtime. Khi chạy `npm run dev`, khởi động lại dev server sau khi đổi `.env`.
 
@@ -118,6 +120,9 @@ Với Next.js, `ADS_ENABLED` được đọc khi prerender các trang. Khi dùng
 | `RATE_LIMIT_WINDOW` | `60000` | Cửa sổ rate limit (ms) |
 | `RATE_LIMIT_MAX` | `20` | Request tối đa/cửa sổ/IP |
 | `ADS_ENABLED` | `false` | Bật/tắt quảng cáo; đặt `true` trước khi build và khi chạy production |
+| `NEXT_PUBLIC_MONETAG_VIGNETTE_ZONE_ID` | `12238810` | Monetag Vignette khi mở download dialog |
+| `NEXT_PUBLIC_MONETAG_IN_PAGE_PUSH_ZONE_ID` | `12238840` | Monetag In-Page Push toàn site |
+| `NEXT_PUBLIC_ADCASH_INTERSTITIAL_ZONE_ID` | `12435318` | Adcash Interstitial cho Analyze/Download |
 | `NEXT_PUBLIC_ADSTERRA_HEADER_SCRIPT_URL` / `NEXT_PUBLIC_ADSTERRA_HEADER_CONTAINER_ID` | trống | Zone Native riêng phía trên header |
 | `NEXT_PUBLIC_ADSTERRA_LEFT_RAIL_SCRIPT_URL` / `NEXT_PUBLIC_ADSTERRA_LEFT_RAIL_CONTAINER_ID` | trống | Zone Native riêng bên trái, chỉ màn hình từ 1800 px |
 | `NEXT_PUBLIC_ADSTERRA_RIGHT_RAIL_SCRIPT_URL` / `NEXT_PUBLIC_ADSTERRA_RIGHT_RAIL_CONTAINER_ID` | trống | Zone Native riêng bên phải, chỉ màn hình từ 1800 px |

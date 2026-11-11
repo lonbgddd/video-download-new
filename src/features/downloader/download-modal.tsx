@@ -6,6 +6,8 @@ import { useDownloadJob } from "@/hooks/use-download-job";
 import { UI_CONTENT } from "@/config/ui-content";
 import type { Locale } from "@/config/locales";
 import { AdsterraNative } from "@/components/ads/adsterra-native";
+import { MonetagVignette } from "@/components/ads/monetag-vignette";
+import { requestAdcashInterstitial } from "@/components/ads/adcash-interstitial";
 
 export function DownloadModal({ jobId, open, onOpenChange, onCompleted, locale, adsEnabled = false }: { jobId?: string; open: boolean; onOpenChange: (open: boolean) => void; onCompleted: () => void; locale: Locale; adsEnabled?: boolean }) {
   const copy = UI_CONTENT[locale].modal;
@@ -16,5 +18,9 @@ export function DownloadModal({ jobId, open, onOpenChange, onCompleted, locale, 
   }, [job?.status, job?.downloadUrl, onCompleted]);
   const started = jobId !== undefined && startedJobId === jobId;
   const done = job?.status === "completed";
-  return <Modal open={open} onOpenChange={onOpenChange} title={done ? copy.ready : copy.preparing} closeLabel={copy.close}><div className="download-modal-body"><div className={`download-orbit ${done ? "done" : ""}`}>{done ? <CheckCircle2/> : <LoaderCircle/>}</div><p>{error ?? (done ? copy.ready : copy.creating)}</p>{job?.progress !== null && job?.progress !== undefined ? <div className="progress-track"><span style={{ width: `${job.progress}%` }}/></div> : <div className="progress-track indeterminate"><span/></div>}{done && job.downloadUrl ? <><small>{started ? copy.sent : copy.instruction}</small><a className="primary-button" href={job.downloadUrl} download onClick={() => jobId && setStartedJobId(jobId)}><Download/>{copy.download}</a></> : !done && <small>{copy.waiting}</small>}{job?.status === "failed" && <button className="secondary-button" onClick={() => onOpenChange(false)}>{copy.close}</button>}<AdsterraNative enabled={adsEnabled} active={open} placement="download-modal" label={UI_CONTENT[locale].misc.ad}/></div></Modal>;
+  const startBrowserDownload = () => {
+    if (adsEnabled) requestAdcashInterstitial("download-dialog");
+    if (jobId) setStartedJobId(jobId);
+  };
+  return <><Modal open={open} onOpenChange={onOpenChange} title={done ? copy.ready : copy.preparing} closeLabel={copy.close}><div className="download-modal-body"><div className={`download-orbit ${done ? "done" : ""}`}>{done ? <CheckCircle2/> : <LoaderCircle/>}</div><p>{error ?? (done ? copy.ready : copy.creating)}</p>{job?.progress !== null && job?.progress !== undefined ? <div className="progress-track"><span style={{ width: `${job.progress}%` }}/></div> : <div className="progress-track indeterminate"><span/></div>}{done && job.downloadUrl ? <><small>{started ? copy.sent : copy.instruction}</small><a className="primary-button" href={job.downloadUrl} download onClick={startBrowserDownload}><Download/>{copy.download}</a></> : !done && <small>{copy.waiting}</small>}{job?.status === "failed" && <button className="secondary-button" onClick={() => onOpenChange(false)}>{copy.close}</button>}<AdsterraNative enabled={adsEnabled} active={open} placement="download-modal" label={UI_CONTENT[locale].misc.ad}/></div></Modal><MonetagVignette enabled={adsEnabled} active={open}/></>;
 }

@@ -15,6 +15,7 @@ import { detectPlatform } from "@/config/platforms";
 import { UI_CONTENT } from "@/config/ui-content";
 import type { Locale } from "@/config/locales";
 import { AdsterraNative } from "@/components/ads/adsterra-native";
+import { requestAdcashInterstitial } from "@/components/ads/adcash-interstitial";
 
 type Values = { url: string };
 
@@ -29,7 +30,11 @@ export function UrlAnalyzer({
   const schema = z.object({ url: z.string().trim().url(copy.invalid).max(2048, copy.invalid) });
   const analyzer = useMediaAnalyzer(); const [pasteMessage, setPasteMessage] = useState(""); const [directLinkPending, setDirectLinkPending] = useState(false); const [directLinkError, setDirectLinkError] = useState("");
   const { register, handleSubmit, setValue, reset, control, formState: { errors } } = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { url: "" } }); const value = useWatch({ control, name: "url" });
-  const submit = ({ url }: Values) => { setDirectLinkError(""); analyzer.mutate(url); };
+  const submit = ({ url }: Values) => {
+    setDirectLinkError("");
+    if (adsEnabled) requestAdcashInterstitial("analyze-submit");
+    analyzer.mutate(url);
+  };
   const openDirectLink = async () => {
     if (!value) return;
     const tab = window.open("about:blank", "_blank");

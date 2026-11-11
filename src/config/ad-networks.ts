@@ -66,12 +66,30 @@ export function getAdsterraNativeUnit(
   return ADSTERRA_NATIVE_PLACEMENTS[placement];
 }
 
-export const MONETAG_SCRIPT_URL = "https://quge5.com/88/tag.min.js";
-export const MONETAG_ZONE_ID = "308758";
+// Monetag Vignette: replace these NEXT_PUBLIC_* values when the production
+// Vignette zone or script host changes. Zone IDs are public ad identifiers.
+export const MONETAG_VIGNETTE_SCRIPT_URL =
+  process.env.NEXT_PUBLIC_MONETAG_VIGNETTE_SCRIPT_URL ??
+  "https://n6wxm.com/vignette.min.js";
+export const MONETAG_VIGNETTE_ZONE_ID =
+  process.env.NEXT_PUBLIC_MONETAG_VIGNETTE_ZONE_ID ?? "12238810";
+
+// Monetag In-Page Push: replace these NEXT_PUBLIC_* values with the matching
+// script and zone generated in the Monetag dashboard.
+export const MONETAG_IN_PAGE_PUSH_SCRIPT_URL =
+  process.env.NEXT_PUBLIC_MONETAG_IN_PAGE_PUSH_SCRIPT_URL ??
+  "https://nap5k.com/tag.min.js";
+export const MONETAG_IN_PAGE_PUSH_ZONE_ID =
+  process.env.NEXT_PUBLIC_MONETAG_IN_PAGE_PUSH_ZONE_ID ?? "12238840";
 
 export const ADCASH_LIBRARY_SCRIPT_URL = "https://acscdn.com/script/aclib.js";
 
-export const ADCASH_AUTOTAG_ZONE_ID = "4v0l9qffcm";
+// Adcash Interstitial: replace this public zone ID when rotating the
+// Interstitial zone in Adcash. The trigger remains centralized and throttled.
+export const ADCASH_INTERSTITIAL_ZONE_ID =
+  process.env.NEXT_PUBLIC_ADCASH_INTERSTITIAL_ZONE_ID ?? "12435318";
+
+export const ADCASH_INTERSTITIAL_MIN_INTERVAL_MS = 30_000;
 
 export const ADSTERRA_POPUNDER_STORAGE_KEY =
   "video-downloader:adsterra-popunder:last-shown-at";

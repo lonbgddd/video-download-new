@@ -2,7 +2,6 @@ import { UI_CONTENT } from "@/config/ui-content";
 import type { Locale } from "@/config/locales";
 import { AdsterraNative } from "@/components/ads/adsterra-native";
 import { AdsterraSocialBar } from "@/components/ads/adsterra-social-bar";
-import { MonetagZone } from "@/components/ads/monetag-zone";
 
 export type AdSlotPosition =
   | "mid-article"
@@ -24,12 +23,7 @@ export function AdSlot({
 }) {
   const enabled = process.env.ADS_ENABLED === "true";
   if (position === "mid-article") {
-    return (
-      <>
-        <AdsterraSocialBar enabled={enabled} />
-        <MonetagZone enabled={enabled} />
-      </>
-    );
+    return <AdsterraSocialBar enabled={enabled} />;
   }
   return (
     <AdsterraNative
