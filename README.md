@@ -37,7 +37,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Image production gồm Node, FFmpeg, FFprobe và yt-dlp; chạy bằng user không đặc quyền, root filesystem read-only và tmpfs riêng cho file tạm.
+Image production gồm Node, FFmpeg, FFprobe và yt-dlp; chạy bằng user không đặc quyền và root filesystem read-only. Luồng tải hiện tại không lưu media thành file trên server.
 
 ## Kiến trúc
 
@@ -45,22 +45,23 @@ Image production gồm Node, FFmpeg, FFprobe và yt-dlp; chạy bằng user khô
 - `src/features/downloader`: analyzer, result, formats, modal tiến trình.
 - `src/services/extractor`: `MediaExtractor`, direct extractor, yt-dlp adapter và registry.
 - `src/services/media`: cache metadata và FFmpeg/FFprobe adapter.
-- `src/services/jobs`: hàng đợi in-memory có concurrency limit, timeout, opaque token.
-- `src/services/storage`: `StorageAdapter`, local temporary storage và cleanup.
+- `src/services/jobs`: download ticket in-memory có thời hạn và opaque token.
+- `src/services/storage`: adapter lưu file cục bộ cũ; luồng tải hiện tại không dùng adapter này.
 - `src/services/security`: URL validation, DNS resolution và SSRF protection.
 - `src/services/rate-limit`: rate limit in-memory.
 - `src/services/analytics`: abstraction không phụ thuộc nhà cung cấp.
 
-Route handler chỉ validate/điều phối. Business logic nằm trong service. MVP không cần database; production nhiều replica nên thay cache/job/rate-limit in-memory bằng Redis, và local storage bằng S3/R2-compatible adapter.
+Route handler chỉ validate/điều phối. Business logic nằm trong service. MVP không cần database; production nhiều replica nên thay cache/ticket/rate-limit in-memory bằng Redis.
 
 ## Luồng xử lý
 
 1. `POST /api/media/analyze` validate URL, chặn private IP sau DNS resolution, chọn extractor và cache metadata ngắn hạn.
 2. UI chỉ hiển thị formats extractor trả về.
-3. `POST /api/download` tạo job từ `mediaId` + `formatId`; client không truyền media URL hay filesystem path.
-4. Worker in-process tải vào directory cô lập, kiểm tra giới hạn và phát opaque URL.
-5. `GET /api/jobs/:id` trả trạng thái; UI polling với indeterminate progress khi backend không có phần trăm thật.
-6. Download route stream file với `Content-Disposition`; cleanup xóa file hết hạn/orphan.
+3. Client gửi `mediaId` + `formatId`; không gửi media URL hay filesystem path.
+4. `POST /api/download` tạo ticket có thời hạn; chưa tải media và không ghi file xuống ổ đĩa server.
+5. Khi người dùng bấm tải, `GET /api/download/:id` stream dữ liệu nguồn tới trình duyệt với `Content-Disposition`; giới hạn kích thước được kiểm tra trong lúc truyền.
+6. Stream đi qua server nên server vẫn dùng băng thông và xử lý media, nhưng không lưu bản tải xuống thành file tạm.
+7. Video dài hơn `MAX_MEDIA_DURATION` có nút dự phòng để lấy một luồng A/V trực tiếp và mở ở tab mới; sau khi lấy URL, media không đi qua server và link có thể hết hạn hoặc chỉ phát inline.
 
 ## Thêm extractor/platform
 
@@ -76,12 +77,11 @@ Route handler chỉ validate/điều phối. Business logic nằm trong service.
 | Biến | Mặc định | Ý nghĩa |
 |---|---:|---|
 | `APP_URL` | `http://localhost:3000` | Canonical URL |
-| `TEMP_DIRECTORY` | `/tmp/video-downloader` | Root file tạm |
 | `MAX_MEDIA_DURATION` | `3600` | Thời lượng tối đa (giây) |
 | `MAX_FILE_SIZE` | `1073741824` | Kích thước tối đa (byte) |
-| `MAX_CONCURRENT_JOBS` | `3` | Số job chạy đồng thời |
-| `DOWNLOAD_TIMEOUT` | `600000` | Timeout mỗi job (ms) |
-| `JOB_TTL` | `1800` | Thời hạn job/file (giây) |
+| `MAX_CONCURRENT_JOBS` | `3` | Số luồng tải đồng thời |
+| `DOWNLOAD_TIMEOUT` | `600000` | Timeout mỗi luồng tải (ms) |
+| `JOB_TTL` | `1800` | Thời hạn ticket tải (giây) |
 | `RATE_LIMIT_WINDOW` | `60000` | Cửa sổ rate limit (ms) |
 | `RATE_LIMIT_MAX` | `20` | Request tối đa/cửa sổ/IP |
 | `ADS_ENABLED` | `false` | Chuẩn bị slot quảng cáo server-side |
@@ -92,11 +92,12 @@ Route handler chỉ validate/điều phối. Business logic nằm trong service.
 ## Bảo mật và giới hạn
 
 - Chỉ HTTP(S); cấm credentials trong URL, localhost, private/link-local/metadata IP, `.local`/`.internal`; resolve DNS trước khi xử lý và kiểm tra lại redirect ở direct extractor.
-- `spawn` dùng argument array, không nối shell command; filename được sanitize; mỗi job có directory riêng.
+- `spawn` dùng argument array, không nối shell command; filename được sanitize; tải xuống được stream và giới hạn kích thước.
 - MIME, size, duration, timeout, redirect, concurrency và request rate đều có giới hạn.
 - Không log cookie, authorization hoặc URL đầy đủ chứa token.
 - Rate limit/cache/job hiện là in-memory và không đồng bộ qua nhiều replica. Production nên dùng Redis/queue worker riêng.
 - yt-dlp extractor phụ thuộc thay đổi của nguồn; trạng thái UI là Limited, không cam kết mọi URL hoạt động.
+- Link dự phòng chỉ dùng cho video công khai vượt giới hạn thời lượng và nguồn phải cung cấp một luồng A/V đơn; URL tạm được mở trên trình duyệt và có thể hết hạn.
 - Tiến trình là indeterminate nếu extractor không cung cấp telemetry; ứng dụng không tạo phần trăm giả.
 
 ## Triển khai production

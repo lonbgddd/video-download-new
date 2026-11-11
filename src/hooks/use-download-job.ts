@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import type { DownloadJob } from "@/types/media";
 
-type PublicJob = Omit<DownloadJob, "filePath" | "downloadToken"> & { downloadUrl?: string };
+type PublicJob = Omit<DownloadJob, "downloadToken"> & { downloadUrl?: string };
 
 export function useDownloadJob(jobId?: string) {
   const [job, setJob] = useState<PublicJob>(); const [error, setError] = useState<string>();

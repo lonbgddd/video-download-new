@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import path from "node:path";
+import { PassThrough, type Readable, type Writable } from "node:stream";
 import type { MediaExtractor } from "./media-extractor";
 import type { MediaFormat, PlatformId } from "@/types/media";
 import { detectPlatform } from "@/config/platforms";
@@ -22,23 +22,84 @@ function run(binary: string, args: string[], signal?: AbortSignal): Promise<stri
 
 const baseArgs = ["--no-playlist", "--no-warnings", "--js-runtimes", "node"];
 
-export function buildYtDlpDownloadArgs(format: MediaFormat, outputPath: string, url: URL) {
-  let selector = format.id;
-  if (format.type === "video" && !format.hasAudio) {
-    const preferredAudio = format.extension === "webm" ? "bestaudio[ext=webm]" : "bestaudio[ext=m4a]";
-    selector = `${format.id}+${preferredAudio}/${format.id}+bestaudio/${format.id}`;
-  }
-  const args = [
+export function buildYtDlpStreamArgs(formatId: string, url: URL) {
+  return [
     ...baseArgs,
+    "--no-cache-dir",
     "--max-filesize", String(env.MAX_FILE_SIZE),
-    "--format", selector,
-    "--output", outputPath,
+    "--format", formatId,
+    "--output", "-",
     "--no-part",
+    "--no-progress",
+    "--",
+    url.href,
   ];
-  if (path.isAbsolute(env.FFMPEG_PATH)) args.push("--ffmpeg-location", env.FFMPEG_PATH);
-  if (format.type === "video" && !format.hasAudio) args.push("--merge-output-format", format.extension);
-  args.push("--", url.href);
-  return args;
+}
+
+export function getPreferredYtDlpAudioFormat(format: MediaFormat) {
+  return format.extension === "webm" ? "bestaudio[ext=webm]" : "bestaudio[ext=m4a]";
+}
+
+export function buildYtDlpDirectUrlArgs(url: URL) {
+  return [
+    ...baseArgs,
+    "--no-cache-dir",
+    "--format", "best[vcodec!=none][acodec!=none]",
+    "--get-url",
+    "--",
+    url.href,
+  ];
+}
+
+function waitForFirstData(stream: Readable) {
+  return new Promise<void>((resolve, reject) => {
+    const cleanup = () => {
+      stream.off("readable", onReadable);
+      stream.off("end", onEnd);
+      stream.off("error", onError);
+    };
+    const onReadable = () => {
+      if (stream.readableLength === 0) return;
+      cleanup();
+      resolve();
+    };
+    const onEnd = () => { cleanup(); reject(new AppError("PROCESSING_FAILED", "Media source returned an empty stream")); };
+    const onError = (error: Error) => { cleanup(); reject(error); };
+    stream.on("readable", onReadable);
+    stream.once("end", onEnd);
+    stream.once("error", onError);
+    onReadable();
+  });
+}
+
+function processError(binary: string, error?: NodeJS.ErrnoException) {
+  if (error?.code === "ENOENT") return new AppError("PROCESSING_FAILED", `Không tìm thấy chương trình tại ${binary}`);
+  return new AppError("PROCESSING_FAILED", "Không thể truyền dữ liệu media.");
+}
+
+function terminate(child: ReturnType<typeof spawn>) {
+  if (child.exitCode === null && child.signalCode === null) child.kill("SIGTERM");
+}
+
+async function startYtDlpStream(args: string[], signal?: AbortSignal) {
+  const child = spawn(env.YT_DLP_PATH, args, { stdio: ["ignore", "pipe", "ignore"], signal });
+  const body = new PassThrough();
+  child.stdout.pipe(body, { end: false });
+  child.once("error", (error: NodeJS.ErrnoException) => body.destroy(signal?.aborted ? new AppError("TIMEOUT", "Quá trình xử lý đã hết thời gian.") : processError(env.YT_DLP_PATH, error)));
+  child.once("close", (code) => {
+    if (code === 0) body.end();
+    else body.destroy(signal?.aborted ? new AppError("TIMEOUT", "Quá trình xử lý đã hết thời gian.") : processError(env.YT_DLP_PATH));
+  });
+  const stop = () => { terminate(child); body.destroy(new AppError("TIMEOUT", "Quá trình xử lý đã hết thời gian.")); };
+  signal?.addEventListener("abort", stop, { once: true });
+  body.once("close", () => { signal?.removeEventListener("abort", stop); terminate(child); });
+  try {
+    await waitForFirstData(body);
+    return body;
+  } catch (error) {
+    terminate(child);
+    throw error;
+  }
 }
 
 function normalizeFormat(format: YtDlpFormat): MediaFormat | null {
@@ -58,11 +119,11 @@ function normalizeFormat(format: YtDlpFormat): MediaFormat | null {
 export class YtDlpExtractor implements MediaExtractor {
   readonly name = "yt-dlp";
   supports(url: URL) { return detectPlatform(url.hostname) !== "other" && detectPlatform(url.hostname) !== "direct"; }
-  private async read(url: URL, signal?: AbortSignal): Promise<YtDlpJson> {
+  private async read(url: URL, signal?: AbortSignal, enforceDurationLimit = true): Promise<YtDlpJson> {
     const raw = await run(env.YT_DLP_PATH, ["--dump-single-json", ...baseArgs, "--skip-download", "--", url.href], signal);
     const data = JSON.parse(raw) as YtDlpJson;
     if (data.is_live) throw new AppError("RESTRICTED_MEDIA", "Live streams are not supported");
-    if ((data.duration ?? 0) > env.MAX_MEDIA_DURATION) throw new AppError("MEDIA_TOO_LONG", "Media exceeds duration limit");
+    if (enforceDurationLimit && (data.duration ?? 0) > env.MAX_MEDIA_DURATION) throw new AppError("MEDIA_TOO_LONG", "Media exceeds duration limit");
     return data;
   }
   async getMetadata(url: URL, signal?: AbortSignal) {
@@ -70,7 +131,76 @@ export class YtDlpExtractor implements MediaExtractor {
     return { title: data.title, thumbnail: data.thumbnail, duration: data.duration, author: data.uploader, platform: detectPlatform(url.hostname) as PlatformId, sourceUrl: url.href, formats: (data.formats ?? []).map(normalizeFormat).filter((item): item is MediaFormat => Boolean(item)).filter((item) => !item.fileSize || item.fileSize <= env.MAX_FILE_SIZE) };
   }
   async getFormats(url: URL, signal?: AbortSignal) { return (await this.getMetadata(url, signal)).formats ?? []; }
-  async download(url: URL, format: MediaFormat, outputPath: string, signal?: AbortSignal) {
-    await run(env.YT_DLP_PATH, buildYtDlpDownloadArgs(format, outputPath, url), signal);
+
+  async getDirectUrl(url: URL, signal?: AbortSignal) {
+    const data = await this.read(url, signal, false);
+    if ((data.duration ?? 0) <= env.MAX_MEDIA_DURATION) throw new AppError("FORMAT_NOT_AVAILABLE", "Direct-link fallback is only available for long videos");
+    const output = await run(env.YT_DLP_PATH, buildYtDlpDirectUrlArgs(url), signal);
+    const links = output.trim().split(/\r?\n/);
+    if (links.length !== 1) throw new AppError("FORMAT_NOT_AVAILABLE", "No single direct video stream is available");
+    try {
+      return new URL(links[0]).href;
+    } catch {
+      throw new AppError("PROCESSING_FAILED", "The extractor returned an invalid direct URL");
+    }
+  }
+
+  async stream(url: URL, format: MediaFormat, signal?: AbortSignal) {
+    if (format.type !== "video" || format.hasAudio) {
+      return {
+        body: await startYtDlpStream(buildYtDlpStreamArgs(format.id, url), signal),
+        mimeType: format.mimeType,
+        extension: format.extension,
+      };
+    }
+
+    const audioFormat = getPreferredYtDlpAudioFormat(format);
+    const video = spawn(env.YT_DLP_PATH, buildYtDlpStreamArgs(format.id, url), { stdio: ["ignore", "pipe", "ignore"], signal });
+    const audio = spawn(env.YT_DLP_PATH, buildYtDlpStreamArgs(audioFormat, url), { stdio: ["ignore", "pipe", "ignore"], signal });
+    const ffmpeg = spawn(env.FFMPEG_PATH, [
+      "-hide_banner", "-loglevel", "error",
+      "-i", "pipe:0", "-i", "pipe:3",
+      "-map", "0:v:0", "-map", "1:a:0", "-c", "copy", "-f", "matroska", "pipe:1",
+    ], { stdio: ["pipe", "pipe", "ignore", "pipe"], signal });
+    const body = new PassThrough();
+    const audioInput = ffmpeg.stdio[3] as Writable | null;
+    if (!ffmpeg.stdin || !ffmpeg.stdout || !audioInput) throw new AppError("PROCESSING_FAILED", "Không thể khởi động luồng ghép media.");
+    video.stdout.pipe(ffmpeg.stdin);
+    audio.stdout.pipe(audioInput);
+    ffmpeg.stdout.pipe(body, { end: false });
+
+    const failStream = (error: NodeJS.ErrnoException | undefined, binary: string) => {
+      body.destroy(signal?.aborted ? new AppError("TIMEOUT", "Quá trình xử lý đã hết thời gian.") : processError(binary, error));
+      terminate(video);
+      terminate(audio);
+      terminate(ffmpeg);
+    };
+    video.once("error", (error: NodeJS.ErrnoException) => failStream(error, env.YT_DLP_PATH));
+    audio.once("error", (error: NodeJS.ErrnoException) => failStream(error, env.YT_DLP_PATH));
+    ffmpeg.once("error", (error: NodeJS.ErrnoException) => failStream(error, env.FFMPEG_PATH));
+    const sourceFailed = (code: number | null) => { if (code !== 0) failStream(undefined, env.YT_DLP_PATH); };
+    video.once("close", sourceFailed);
+    audio.once("close", sourceFailed);
+    ffmpeg.once("close", (code) => {
+      if (code === 0) body.end();
+      else body.destroy(signal?.aborted ? new AppError("TIMEOUT", "Quá trình xử lý đã hết thời gian.") : processError(env.FFMPEG_PATH));
+    });
+    const stop = () => failStream(undefined, env.FFMPEG_PATH);
+    signal?.addEventListener("abort", stop, { once: true });
+    body.once("close", () => {
+      signal?.removeEventListener("abort", stop);
+      terminate(video);
+      terminate(audio);
+      terminate(ffmpeg);
+    });
+    try {
+      await waitForFirstData(body);
+      return { body, mimeType: "video/x-matroska", extension: "mkv" };
+    } catch (error) {
+      terminate(video);
+      terminate(audio);
+      terminate(ffmpeg);
+      throw error;
+    }
   }
 }

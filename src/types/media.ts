@@ -44,8 +44,5 @@ export interface DownloadJob {
   updatedAt: number;
   expiresAt: number;
   downloadToken?: string;
-  fileName?: string;
-  filePath?: string;
-  mimeType?: string;
   error?: string;
 }

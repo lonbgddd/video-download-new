@@ -41,4 +41,22 @@ describe("DirectMediaExtractor", () => {
 
     expect(metadata.formats?.[0]).toMatchObject({ mimeType: "video/webm", fileSize: 42 });
   });
+
+  it("streams media bytes from the validated source", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(Buffer.from("media-bytes"), {
+      status: 200,
+      headers: { "content-type": "video/mp4" },
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+    const extractor = new DirectMediaExtractor();
+    const format = { id: "direct-mp4", type: "video", label: "Original", extension: "mp4", hasAudio: true } as const;
+
+    const result = await extractor.stream(new URL("https://cdn.example/video.mp4"), format);
+    const chunks: Buffer[] = [];
+    for await (const chunk of result.body) chunks.push(Buffer.from(chunk));
+
+    expect(Buffer.concat(chunks).toString()).toBe("media-bytes");
+    expect(result.mimeType).toBe("video/mp4");
+    expect(fetchMock).toHaveBeenCalledOnce();
+  });
 });

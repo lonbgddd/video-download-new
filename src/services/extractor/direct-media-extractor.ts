@@ -1,7 +1,6 @@
 import path from "node:path";
-import { createWriteStream } from "node:fs";
-import { pipeline } from "node:stream/promises";
-import { Readable, Transform } from "node:stream";
+import { Readable } from "node:stream";
+import type { ReadableStream as NodeReadableStream } from "node:stream/web";
 import type { MediaExtractor } from "./media-extractor";
 import type { MediaFormat } from "@/types/media";
 import { AppError } from "@/lib/errors";
@@ -52,23 +51,21 @@ export class DirectMediaExtractor implements MediaExtractor {
 
   async getFormats(url: URL) { return [this.makeFormat(url)]; }
 
+  async getDirectUrl(url: URL) { return url.href; }
+
   private makeFormat(url: URL, mimeType?: string, fileSize?: number): MediaFormat {
     const extension = path.extname(url.pathname).slice(1).toLowerCase() || "mp4";
     const type = extension.match(/^(mp3|m4a|ogg|wav)$/) ? "audio" : "video";
     return { id: `direct-${extension}`, type, label: type === "video" ? "Chất lượng gốc" : "Âm thanh gốc", extension, mimeType, fileSize, hasAudio: true };
   }
 
-  async download(url: URL, _format: MediaFormat, outputPath: string, signal?: AbortSignal) {
+  async stream(url: URL, _format: MediaFormat, signal?: AbortSignal) {
     const response = await safeFetch(url, { signal });
     if (!response.ok || !response.body) throw new AppError("MEDIA_NOT_FOUND", "Download source unavailable");
     const mime = response.headers.get("content-type") ?? "";
     if (!allowedMime.test(mime) && mime.split(";", 1)[0].trim().toLowerCase() !== "application/octet-stream") throw new AppError("PROCESSING_FAILED", "Unexpected MIME type");
-    let total = 0;
-    const limiter = new Transform({ transform(chunk, _encoding, callback) {
-      total += chunk.length;
-      if (total > env.MAX_FILE_SIZE) callback(new AppError("FILE_TOO_LARGE", "Media exceeds configured size"));
-      else callback(null, chunk);
-    }});
-    await pipeline(Readable.fromWeb(response.body as never), limiter, createWriteStream(outputPath, { flags: "wx", mode: 0o600 }));
+    const size = Number(response.headers.get("content-length"));
+    if (Number.isFinite(size) && size > env.MAX_FILE_SIZE) throw new AppError("FILE_TOO_LARGE", "Media exceeds configured size");
+    return { body: Readable.fromWeb(response.body as unknown as NodeReadableStream<Uint8Array>), mimeType: mime.split(";", 1)[0].trim().toLowerCase() };
   }
 }

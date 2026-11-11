@@ -8,9 +8,6 @@ services:
         required: false
     environment:
       APP_URL: ${APP_URL:-http://localhost:3000}
-      TEMP_DIRECTORY: /tmp/video-downloader
-    tmpfs:
-      - /tmp/video-downloader:size=2g,mode=0700,uid=1001,gid=1001
     restart: unless-stopped
     read_only: true
     security_opt:
