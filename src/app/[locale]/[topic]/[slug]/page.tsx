@@ -56,6 +56,13 @@ export default async function LocalizedLandingPage({ params }: LandingPageProps)
             <Link className="seo-primary-link" href="#download-tool">{copy.tool}</Link>
           </header>
 
+          <section className="seo-tool-section" id="download-tool" aria-labelledby="seo-tool-title">
+            <h2 id="seo-tool-title">
+              {copy.checkLink}
+            </h2>
+            <UrlAnalyzer locale={route.locale} adsEnabled={adsEnabled} />
+          </section>
+
           <section className="seo-section" aria-labelledby="seo-benefits-title">
             <h2 id="seo-benefits-title">
               {copy.benefits}
@@ -63,13 +70,6 @@ export default async function LocalizedLandingPage({ params }: LandingPageProps)
             <ul className="seo-benefits">
               {route.content.benefits.map((benefit) => <li key={benefit}>{benefit}</li>)}
             </ul>
-          </section>
-
-          <section className="seo-tool-section" id="download-tool" aria-labelledby="seo-tool-title">
-            <h2 id="seo-tool-title">
-              {copy.checkLink}
-            </h2>
-            <UrlAnalyzer locale={route.locale} adsEnabled={adsEnabled} />
           </section>
 
           <section className="seo-section" aria-labelledby="seo-steps-title">
