@@ -1,6 +1,9 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      args:
+        ADS_ENABLED: ${ADS_ENABLED:-false}
     ports:
       - "3000:3000"
     env_file:
@@ -8,6 +11,7 @@ services:
         required: false
     environment:
       APP_URL: ${APP_URL:-http://localhost:3000}
+      ADS_ENABLED: ${ADS_ENABLED:-false}
     restart: unless-stopped
     read_only: true
     security_opt:

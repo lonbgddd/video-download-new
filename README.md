@@ -82,6 +82,8 @@ Quảng cáo tắt mặc định; đặt `ADS_ENABLED=true` để bật các scr
 
 Pop-under hiện dùng khóa `localStorage` để giới hạn một lần trong 24 giờ trên mỗi trình duyệt; chế độ riêng tư hoặc khi storage không khả dụng sẽ không bật pop-under để tránh tần suất không kiểm soát. Social Bar và Native Banner dùng script/zone trong `src/config/ad-networks.ts`. Không bật đồng thời auto-placement bên ngoài các slot này nếu cần giữ nguyên vị trí và UX đã mô tả. Các mạng quảng cáo có thể thay đổi creative hoặc hành vi hiển thị; kiểm tra lại trên thiết bị thật, consent/cookie policy, Core Web Vitals và chính sách của nhà cung cấp trước khi phát hành.
 
+Với Next.js, `ADS_ENABLED` được đọc khi prerender các trang. Khi dùng Docker Compose, chạy lại `docker compose up --build` sau khi đặt biến trong `.env`; với hosting CI/CD, truyền biến này vào cả bước build image lẫn runtime. Khi chạy `npm run dev`, khởi động lại dev server sau khi đổi `.env`.
+
 ## Luồng xử lý
 
 1. `POST /api/media/analyze` validate URL, chặn private IP sau DNS resolution, chọn extractor và cache metadata ngắn hạn.
@@ -113,7 +115,7 @@ Pop-under hiện dùng khóa `localStorage` để giới hạn một lần trong
 | `JOB_TTL` | `1800` | Thời hạn ticket tải (giây) |
 | `RATE_LIMIT_WINDOW` | `60000` | Cửa sổ rate limit (ms) |
 | `RATE_LIMIT_MAX` | `20` | Request tối đa/cửa sổ/IP |
-| `ADS_ENABLED` | `false` | Chuẩn bị slot quảng cáo server-side |
+| `ADS_ENABLED` | `false` | Bật/tắt quảng cáo; đặt `true` trước khi build và khi chạy production |
 | `YT_DLP_PATH` | `yt-dlp` | Binary extractor |
 | `FFMPEG_PATH` | `ffmpeg` | Binary FFmpeg |
 | `FFPROBE_PATH` | `ffprobe` | Binary FFprobe |
