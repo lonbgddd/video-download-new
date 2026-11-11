@@ -76,6 +76,12 @@ Các chủ đề mới kết hợp 25 loại media với 20 nhu cầu sử dụn
 
 Để thêm trang biên tập, bổ sung nội dung đã rà soát cho cả bảy locale trong `src/config/i18n.config.ts`. Khi mở rộng ma trận programmatic, chỉ thêm chủ đề/nội dung có ích và xác minh slug không trùng trong cùng locale. Các route được đưa vào static params, sitemap/hreflang, metadata và structured data; menu và liên kết liên quan chỉ hiển thị một tập con để tránh danh sách quá dài. Trước khi triển khai, rà soát chất lượng bản địa hóa và đặt `APP_URL` thành domain production để canonical, OpenGraph và sitemap chính xác.
 
+## Vị trí quảng cáo
+
+Quảng cáo tắt mặc định; đặt `ADS_ENABLED=true` để bật các script mạng đã cấu hình. Vùng hero/đầu trang không có banner: Social Bar chỉ được gọi khi người đọc cuộn gần điểm giữa nội dung (`IntersectionObserver`, vùng đệm 250 px), còn Native Banner chỉ được gọi gần cuối bài. Slot banner giữ chiều cao tối thiểu để hạn chế layout shift. Homepage đặt Social Bar sau thẻ lợi ích và Native Banner sau hướng dẫn; landing page đặt Social Bar sau các bước và Native Banner sau phần liên kết liên quan.
+
+Pop-under hiện dùng khóa `localStorage` để giới hạn một lần trong 24 giờ trên mỗi trình duyệt; chế độ riêng tư hoặc khi storage không khả dụng sẽ không bật pop-under để tránh tần suất không kiểm soát. Social Bar và Native Banner dùng script/zone trong `src/config/ad-networks.ts`. Không bật đồng thời auto-placement bên ngoài các slot này nếu cần giữ nguyên vị trí và UX đã mô tả. Các mạng quảng cáo có thể thay đổi creative hoặc hành vi hiển thị; kiểm tra lại trên thiết bị thật, consent/cookie policy, Core Web Vitals và chính sách của nhà cung cấp trước khi phát hành.
+
 ## Luồng xử lý
 
 1. `POST /api/media/analyze` validate URL, chặn private IP sau DNS resolution, chọn extractor và cache metadata ngắn hạn.

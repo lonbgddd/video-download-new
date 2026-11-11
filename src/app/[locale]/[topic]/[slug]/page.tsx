@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { JsonLdSchema } from "@/components/seo/JsonLdSchema";
 import { InternalLinkingWidget } from "@/components/navigation/InternalLinkingWidget";
 import { LocaleTopicFooter, LocaleTopicHeader } from "@/components/navigation/LocaleTopicHeader";
+import { AdSlot } from "@/components/ad-slot";
 import { getLocalizedRoutes, type Locale } from "@/config/i18n.config";
 import { UrlAnalyzer } from "@/features/downloader/url-analyzer";
 import { generateLandingMetadata, getLocalizedRouteByParams } from "@/lib/seo/metadata";
@@ -78,6 +79,8 @@ export default async function LocalizedLandingPage({ params }: LandingPageProps)
             </ol>
           </section>
 
+          <AdSlot position="mid-article" locale={route.locale} />
+
           <section className="seo-section seo-faq" aria-labelledby="seo-faq-title">
             <h2 id="seo-faq-title">FAQ</h2>
             {route.content.faqs.map(({ question, answer }) => (
@@ -89,6 +92,7 @@ export default async function LocalizedLandingPage({ params }: LandingPageProps)
           </section>
 
           <InternalLinkingWidget route={route} />
+          <AdSlot position="end-article" locale={route.locale} />
         </article>
       </main>
       <LocaleTopicFooter locale={route.locale} />
