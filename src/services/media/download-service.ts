@@ -6,6 +6,7 @@ import { sanitizeFilename } from "@/services/storage/local-storage-adapter";
 import { validatePublicUrl } from "@/services/security/url-validator";
 import { env } from "@/config/env";
 import { AppError } from "@/lib/errors";
+import type { MediaExtractor } from "@/services/extractor/media-extractor";
 
 const mimeByExtension: Record<string, string> = {
   mp4: "video/mp4", m4v: "video/mp4", webm: "video/webm", mov: "video/quicktime",
@@ -70,11 +71,11 @@ export class DownloadService {
     };
   }
 
-  async stream(media: MediaMetadata, format: MediaFormat, signal?: AbortSignal) {
+  async stream(media: MediaMetadata, format: MediaFormat, signal?: AbortSignal, sourceExtractor?: MediaExtractor) {
     const release = await this.acquire(signal);
     try {
       const url = await validatePublicUrl(media.sourceUrl);
-      const extractor = extractorRegistry.find(url);
+      const extractor = sourceExtractor ?? extractorRegistry.find(url);
       const extracted = await extractor.stream(url, format, signal);
       const extension = sanitizeFilename((extracted.extension ?? format.extension).toLowerCase()).replace(/^\.+/, "") || "bin";
       const fileName = buildDownloadFilename(media.title, extension);

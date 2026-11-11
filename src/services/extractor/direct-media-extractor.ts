@@ -38,6 +38,10 @@ export class DirectMediaExtractor implements MediaExtractor {
     }
     if (!response.ok) throw new AppError("MEDIA_NOT_FOUND", "Media not found", 404);
     const responseMime = response.headers.get("content-type")?.split(";")[0].trim().toLowerCase() ?? "";
+    if (responseMime && !allowedMime.test(responseMime) && responseMime !== "application/octet-stream") {
+      await response.body?.cancel().catch(() => undefined);
+      throw new AppError("FORMAT_NOT_AVAILABLE", "Source returned a page instead of media");
+    }
     const inferredMime = fallbackMime[path.extname(url.pathname).toLowerCase()];
     const mimeType = allowedMime.test(responseMime) ? responseMime : inferredMime;
     if (!mimeType) throw new AppError("UNSUPPORTED_PLATFORM", "Not a media URL");

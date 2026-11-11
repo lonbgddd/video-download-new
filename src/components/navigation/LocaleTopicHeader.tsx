@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { movieCopy } from "@/config/movie-content";
 import { ChevronDown, Download } from "lucide-react";
 import {
   getLocalizedRoutesForLocale,
@@ -40,6 +41,7 @@ export function LocaleTopicHeader({ locale, currentPageId }: { locale: Locale; c
           <span>VideoDownloader</span>
         </Link>
         <nav className="locale-main-nav" aria-label={labels[locale].tools}>
+          <Link href={`/${locale}/movie-downloader`}>{movieCopy(locale).nav}</Link>
           <details className="topic-menu">
             <summary aria-label={labels[locale].menu}>{labels[locale].tools}<ChevronDown size={16} aria-hidden="true" /></summary>
             <div className="topic-mega-menu">

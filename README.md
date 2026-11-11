@@ -94,6 +94,36 @@ Privacy Policy, Terms of Use và Cookie Policy có route riêng cho cả bảy l
 
 ## Luồng xử lý
 
+Bộ đọc trang phim hỗ trợ chuỗi JSON đã escape trong `self.__next_f.push(...)`
+và record React Flight, không thực thi JavaScript. Các record tập phim có
+`slug`/`link` được lọc theo tập đang mở. Nguồn HLS có ticket tải playlist gốc
+`.m3u8`: kiểm tra URL/redirect, giới hạn 2 MiB, timeout 15 giây và xác minh
+`#EXTM3U` trước khi trả attachment. Đây là file manifest nguyên bản, không phải
+file phim: các URI tương đối vẫn phụ thuộc URL nguồn. Có luồng chuyển HLS VOD sang MP4 riêng, xem phần Chuyển HLS thành MP4 bên dưới.
+
+Tính năng **Tải phim** có trang riêng `/{locale}/movie-downloader`, điều hướng
+Header trên desktop/mobile và nội dung cho bảy ngôn ngữ. Không dùng ô nhập,
+API phân tích hay job tải video mạng xã hội.
+
+- `POST /api/movies/analyze` dùng Cheerio để phân tích DOM (video/source, metadata, data attributes), JSON-LD và cấu hình player tĩnh; duyệt player nhúng theo hàng đợi, bỏ URL trùng.
+  Trả về danh sách nguồn MP4/HLS/DASH và trạng thái xác minh, không dừng ngay sau MP4 đầu tiên.
+  Xác minh MIME và dung lượng MP4 trước khi cấp ticket; HLS có tải playlist gốc và chuyển MP4 cho các nguồn VOD được hỗ trợ; DASH hiện chỉ hiển thị URL.
+- `GET /api/movies/download/:id` dùng ticket ngẫu nhiên có hạn 10 phút để
+  stream nguồn MP4 đã xác minh. Chia sẻ tầng truyền dữ liệu có giới hạn dung
+  lượng/concurrency với video, nhưng có kho ticket riêng (tối đa 500).
+- Kho ticket nằm trong bộ nhớ: restart làm hết hạn; chạy nhiều instance cần
+  sticky routing hoặc chuyển kho này sang Redis trước khi scale.
+- Mỗi trang tối đa 2 MiB; tối đa 8 trang/player, sâu 2 cấp, 100 nguồn.
+  Dò trang tối đa 25 giây, mỗi player 6 giây (API tổng 30 giây).
+  Kết quả có cờ `incomplete`, số trang đã đọc và số player không truy cập được; không cam kết quét toàn bộ website.
+  Mỗi redirect và nguồn tải đều được kiểm tra URL công khai.
+- Không chạy JavaScript từ website, không gửi cookie, không hỗ trợ đăng nhập,
+  DRM. Chuyển HLS VOD sang MP4 dùng luồng riêng mô tả bên dưới. Có thông báo riêng khi chỉ tìm thấy HLS.
+- Trang Motchilliz được cung cấp dùng nguồn chính `.m3u8` và player nhúng;
+  file `1s_blank.mp4` là nguồn mẫu của player, được loại khỏi kết quả.
+
+Luồng video mạng xã hội hiện có:
+
 1. `POST /api/media/analyze` validate URL, chặn private IP sau DNS resolution, chọn extractor và cache metadata ngắn hạn.
 2. UI chỉ hiển thị formats extractor trả về.
 3. Client gửi `mediaId` + `formatId`; không gửi media URL hay filesystem path.
@@ -160,3 +190,29 @@ Build Docker image và chạy sau reverse proxy TLS. Mount temp volume có quota
 - `spawn ffmpeg ENOENT`: cài FFmpeg hoặc dùng Docker.
 - URL trực tiếp bị từ chối: server nguồn phải trả MIME `video/*`/`audio/*`; hostname phải resolve tới public IP.
 - Job biến mất khi restart: trạng thái MVP ở memory; bật Redis/queue trước khi chạy nhiều instance.
+
+### Chuyển HLS thành MP4
+
+Trang Tải phim nhận cả trang xem phim và URL `.m3u8` trực tiếp. Bấm **Chuyển
+thành MP4**, chờ tải các đoạn/ghép xong rồi bấm **Tải MP4 đã ghép**. Có nút
+hủy trong lúc xử lý. Không tải cả phim vào RAM của trình duyệt.
+
+- `POST /api/movies/convert` nhận ticket nguồn HLS đã phân tích, chọn variant
+  có bandwidth cao nhất, tải segment và init fragment vào thư mục riêng dưới
+  `TEMP_DIRECTORY`, rồi FFmpeg remux bằng `-c copy -movflags +faststart`.
+- Chỉ hỗ trợ HLS VOD không mã hóa, TS hoặc fMP4, audio nằm trong cùng luồng.
+  Chưa hỗ trợ livestream, DRM/AES, byte-range, audio playlist tách riêng hoặc
+  codec không tương thích container MP4. Không tự hạ chất lượng hay bỏ lỗi segment.
+- Kiểm tra URL công khai ở mỗi redirect/segment. FFmpeg chỉ được đọc protocol
+  `file`, không tự truy cập mạng. Giới hạn mỗi segment 64 MiB, tổng dữ liệu tải
+  và MP4 theo `MAX_FILE_SIZE`, tối đa 10.000 segment.
+- `DOWNLOAD_TIMEOUT` giới hạn toàn bộ chuyển đổi (mặc định 10 phút),
+  `MAX_CONCURRENT_JOBS` giới hạn số chuyển đổi; tối đa 5 tác vụ/file chờ tải.
+  Cần dự phòng khoảng 2 × `MAX_FILE_SIZE` dung lượng đĩa cho mỗi tác vụ.
+- File hoàn tất có link ngẫu nhiên dùng một lần trong 10 phút; được dọn sau
+  tải, hết hạn, lỗi hoặc hủy. Tiến trình bị kill/restart có thể để lại thư mục
+  `hls-*`; cần dọn chúng khi server dừng. Ticket/file không chia sẻ giữa instance.
+- Request chuẩn bị giữ kết nối tới khi hoàn tất: cấu hình reverse proxy timeout
+  phù hợp `DOWNLOAD_TIMEOUT`; không phù hợp host serverless có timeout ngắn.
+- Docker đã cài FFmpeg. Local macOS: `brew install ffmpeg`, hoặc cấu hình
+  `FFMPEG_PATH` tới binary. Không cần yt-dlp cho luồng chuyển đổi này.
