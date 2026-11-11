@@ -1,4 +1,4 @@
-export type PlatformId = "direct" | "youtube" | "facebook" | "tiktok" | "instagram" | "x" | "vimeo" | "dailymotion" | "twitch" | "other";
+export type PlatformId = "direct" | "youtube" | "facebook" | "tiktok" | "instagram" | "x" | "vimeo" | "dailymotion" | "twitch" | "reddit" | "soundcloud" | "pinterest" | "bilibili" | "other";
 export type PlatformStatus = "supported" | "limited" | "coming-soon";
 export type MediaKind = "video" | "audio" | "thumbnail";
 

@@ -15,7 +15,7 @@ function run(binary: string, args: string[], signal?: AbortSignal): Promise<stri
     let stdout = ""; let stderr = "";
     child.stdout.on("data", (chunk) => { stdout += chunk; if (stdout.length > 10_000_000) child.kill(); });
     child.stderr.on("data", (chunk) => { stderr = (stderr + chunk).slice(-20_000); });
-    child.once("error", (error: NodeJS.ErrnoException) => reject(new AppError("PROCESSING_FAILED", error.code === "ENOENT" ? `Không tìm thấy yt-dlp tại ${binary}` : error.message)));
+    child.once("error", (error: NodeJS.ErrnoException) => reject(new AppError(error.code === "ENOENT" ? "EXTRACTOR_UNAVAILABLE" : "PROCESSING_FAILED", error.code === "ENOENT" ? `Không tìm thấy chương trình tại ${binary}` : error.message)));
     child.once("close", (code) => code === 0 ? resolve(stdout) : reject(new AppError("PROCESSING_FAILED", stderr.slice(-600) || `Extractor exited ${code}`)));
   });
 }
@@ -44,7 +44,7 @@ export function buildYtDlpDirectUrlArgs(url: URL) {
   return [
     ...baseArgs,
     "--no-cache-dir",
-    "--format", "best[vcodec!=none][acodec!=none]",
+    "--format", "best",
     "--get-url",
     "--",
     url.href,
@@ -73,7 +73,7 @@ function waitForFirstData(stream: Readable) {
 }
 
 function processError(binary: string, error?: NodeJS.ErrnoException) {
-  if (error?.code === "ENOENT") return new AppError("PROCESSING_FAILED", `Không tìm thấy chương trình tại ${binary}`);
+  if (error?.code === "ENOENT") return new AppError("EXTRACTOR_UNAVAILABLE", `Không tìm thấy chương trình tại ${binary}`);
   return new AppError("PROCESSING_FAILED", "Không thể truyền dữ liệu media.");
 }
 
@@ -133,8 +133,6 @@ export class YtDlpExtractor implements MediaExtractor {
   async getFormats(url: URL, signal?: AbortSignal) { return (await this.getMetadata(url, signal)).formats ?? []; }
 
   async getDirectUrl(url: URL, signal?: AbortSignal) {
-    const data = await this.read(url, signal, false);
-    if ((data.duration ?? 0) <= env.MAX_MEDIA_DURATION) throw new AppError("FORMAT_NOT_AVAILABLE", "Direct-link fallback is only available for long videos");
     const output = await run(env.YT_DLP_PATH, buildYtDlpDirectUrlArgs(url), signal);
     const links = output.trim().split(/\r?\n/);
     if (links.length !== 1) throw new AppError("FORMAT_NOT_AVAILABLE", "No single direct video stream is available");

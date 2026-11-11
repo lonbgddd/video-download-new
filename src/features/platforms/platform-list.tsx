@@ -1,4 +1,4 @@
-import { SiDailymotion, SiFacebook, SiInstagram, SiTiktok, SiTwitch, SiVimeo, SiX, SiYoutube } from "react-icons/si";
+import { SiBilibili, SiDailymotion, SiFacebook, SiInstagram, SiPinterest, SiReddit, SiSoundcloud, SiTiktok, SiTwitch, SiVimeo, SiX, SiYoutube } from "react-icons/si";
 import { Link2 } from "lucide-react";
 import type { IconType } from "react-icons";
 
@@ -7,6 +7,8 @@ const items: Array<{ name: string; Icon: IconType | typeof Link2; className: str
   { name: "TikTok", Icon: SiTiktok, className: "tiktok", status: "Limited" }, { name: "Instagram", Icon: SiInstagram, className: "instagram", status: "Limited" },
   { name: "X", Icon: SiX, className: "x", status: "Limited" }, { name: "Vimeo", Icon: SiVimeo, className: "vimeo", status: "Limited" },
   { name: "Dailymotion", Icon: SiDailymotion, className: "dailymotion", status: "Limited" }, { name: "Twitch", Icon: SiTwitch, className: "twitch", status: "Limited" },
+  { name: "Reddit", Icon: SiReddit, className: "reddit", status: "Limited" }, { name: "SoundCloud", Icon: SiSoundcloud, className: "soundcloud", status: "Limited" },
+  { name: "Pinterest", Icon: SiPinterest, className: "pinterest", status: "Limited" }, { name: "Bilibili", Icon: SiBilibili, className: "bilibili", status: "Limited" },
   { name: "Direct media", Icon: Link2, className: "direct", status: "Supported" },
 ];
 

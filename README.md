@@ -9,7 +9,7 @@
 - FFmpeg/FFprobe cho các tác vụ media
 - `yt-dlp[default]` và Node.js 22+ làm JavaScript runtime nếu muốn tải YouTube
 
-Link trực tiếp tới `.mp4`, `.webm`, `.mov`, `.m4v`, `.mp3`, `.m4a`, `.ogg`, `.wav` hoạt động với extractor tích hợp sẵn. YouTube, Facebook, TikTok, Instagram, X, Vimeo, Dailymotion và Twitch cần `yt-dlp` trên PATH và chỉ dành cho nội dung công khai hợp lệ.
+Link trực tiếp tới `.mp4`, `.webm`, `.mov`, `.m4v`, `.mp3`, `.m4a`, `.ogg`, `.wav` hoạt động với extractor tích hợp sẵn. YouTube, Facebook, TikTok, Instagram, X, Vimeo, Dailymotion, Twitch, Reddit, SoundCloud, Pinterest và Bilibili cần `yt-dlp` trên PATH và chỉ dành cho nội dung công khai hợp lệ. Danh sách domain được allowlist rõ ràng để giữ URL validation/SSRF protection; không tự động bật mọi website mà yt-dlp có thể nhận diện.
 
 ## Cài đặt và chạy local
 
@@ -42,6 +42,13 @@ Image production gồm Node, FFmpeg, FFprobe và yt-dlp; chạy bằng user khô
 ## Kiến trúc
 
 - `src/app`: App Router, route handlers, SEO/robots/sitemap và các trang.
+- `src/app/[locale]/[topic]/[slug]`: landing page SEO đa ngôn ngữ, prerender từ catalog nội dung.
+- `src/config/locales.ts`: bảy locale và thông tin ngôn ngữ dùng chung.
+- `src/config/i18n.config.ts`: route, nội dung landing page biên tập và các helper đa ngôn ngữ.
+- `src/config/programmatic-seo.ts`: ma trận 25 chủ đề nội dung × 20 nhu cầu sử dụng, được transcreate riêng cho từng locale để tạo 500 trang mới.
+- `src/lib/seo/metadata.ts`: canonical, hreflang, OpenGraph và Twitter metadata.
+- `src/components/seo/JsonLdSchema.tsx`: structured data dùng kiểu `schema-dts`.
+- `src/components/navigation`: menu theo chủ đề, chọn ngôn ngữ và liên kết nội bộ cùng locale.
 - `src/features/downloader`: analyzer, result, formats, modal tiến trình.
 - `src/services/extractor`: `MediaExtractor`, direct extractor, yt-dlp adapter và registry.
 - `src/services/media`: cache metadata và FFmpeg/FFprobe adapter.
@@ -53,6 +60,22 @@ Image production gồm Node, FFmpeg, FFprobe và yt-dlp; chạy bằng user khô
 
 Route handler chỉ validate/điều phối. Business logic nằm trong service. MVP không cần database; production nhiều replica nên thay cache/ticket/rate-limit in-memory bằng Redis.
 
+## SEO đa ngôn ngữ
+
+Site hiện có 7 locale: tiếng Anh, Việt, Tây Ban Nha, Nhật, Pháp, Bồ Đào Nha (Portugal) và Hàn. Có 3 landing page nền cùng 500 chủ đề mới; mỗi chủ đề có URL và nội dung bản địa hóa ở cả 7 locale (tổng cộng 3.521 route landing page). Sitemap còn liệt kê 5 trang chung.
+
+Các chủ đề mới kết hợp 25 loại media với 20 nhu cầu sử dụng thực tế. Bản dịch dùng cụm từ, tiêu đề, mô tả và hướng dẫn riêng theo locale; nội dung luôn nói rõ định dạng phụ thuộc nguồn và không khẳng định mọi liên kết đều hoạt động. Ví dụ:
+
+- `/en/video-downloader/youtube-video-to-mp4`
+- `/vi/cong-cu-tai-video/tai-video-youtube-dinh-dang-mp4`
+- `/es/descargar-videos/youtube-a-mp4-video-publico`
+- `/ja/douga-download/youtube-koukai-douga-mp4`
+- `/fr/telecharger-videos/enregistrer-video-publique`
+- `/pt/baixar-videos/guardar-video-publico-no-navegador`
+- `/ko/video-download/gonggae-dongyeongsang-jeojang`
+
+Để thêm trang biên tập, bổ sung nội dung đã rà soát cho cả bảy locale trong `src/config/i18n.config.ts`. Khi mở rộng ma trận programmatic, chỉ thêm chủ đề/nội dung có ích và xác minh slug không trùng trong cùng locale. Các route được đưa vào static params, sitemap/hreflang, metadata và structured data; menu và liên kết liên quan chỉ hiển thị một tập con để tránh danh sách quá dài. Trước khi triển khai, rà soát chất lượng bản địa hóa và đặt `APP_URL` thành domain production để canonical, OpenGraph và sitemap chính xác.
+
 ## Luồng xử lý
 
 1. `POST /api/media/analyze` validate URL, chặn private IP sau DNS resolution, chọn extractor và cache metadata ngắn hạn.
@@ -61,7 +84,7 @@ Route handler chỉ validate/điều phối. Business logic nằm trong service.
 4. `POST /api/download` tạo ticket có thời hạn; chưa tải media và không ghi file xuống ổ đĩa server.
 5. Khi người dùng bấm tải, `GET /api/download/:id` stream dữ liệu nguồn tới trình duyệt với `Content-Disposition`; giới hạn kích thước được kiểm tra trong lúc truyền.
 6. Stream đi qua server nên server vẫn dùng băng thông và xử lý media, nhưng không lưu bản tải xuống thành file tạm.
-7. Video dài hơn `MAX_MEDIA_DURATION` có nút dự phòng để lấy một luồng A/V trực tiếp và mở ở tab mới; sau khi lấy URL, media không đi qua server và link có thể hết hạn hoặc chỉ phát inline.
+7. Video dài hơn `MAX_MEDIA_DURATION`, hoặc một nền tảng yt-dlp được allowlist không phân tích được vì lỗi extractor phù hợp, có nút dự phòng để lấy luồng media tốt nhất và mở ở tab mới; sau khi lấy URL, media không đi qua server và link có thể hết hạn hoặc chỉ phát inline. Với SoundCloud hoặc nguồn audio, tab sẽ mở audio thay vì video.
 
 ## Thêm extractor/platform
 
@@ -97,7 +120,7 @@ Route handler chỉ validate/điều phối. Business logic nằm trong service.
 - Không log cookie, authorization hoặc URL đầy đủ chứa token.
 - Rate limit/cache/job hiện là in-memory và không đồng bộ qua nhiều replica. Production nên dùng Redis/queue worker riêng.
 - yt-dlp extractor phụ thuộc thay đổi của nguồn; trạng thái UI là Limited, không cam kết mọi URL hoạt động.
-- Link dự phòng chỉ dùng cho video công khai vượt giới hạn thời lượng và nguồn phải cung cấp một luồng A/V đơn; URL tạm được mở trên trình duyệt và có thể hết hạn.
+- Link dự phòng chỉ áp dụng cho nền tảng yt-dlp trong allowlist; nguồn phải cung cấp một luồng media đơn và URL tạm có thể hết hạn.
 - Tiến trình là indeterminate nếu extractor không cung cấp telemetry; ứng dụng không tạo phần trăm giả.
 
 ## Triển khai production

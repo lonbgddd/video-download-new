@@ -6,7 +6,9 @@ import { UrlAnalyzer } from "@/features/downloader/url-analyzer";
 import { FeatureCards, HowItWorks } from "@/components/marketing-sections";
 import { AdSlot } from "@/components/ad-slot";
 import Script from "next/script";
+import type { Metadata } from "next";
 
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 const faqData = [
   { "@type": "Question", name: "Web có miễn phí không?", acceptedAnswer: { "@type": "Answer", text: "Có. Các chức năng cơ bản không yêu cầu đăng ký." } },
   { "@type": "Question", name: "Có lưu video trên server không?", acceptedAnswer: { "@type": "Answer", text: "File chỉ được giữ tạm trong thời gian xử lý theo cấu hình hệ thống." } },

@@ -1,2 +1,9 @@
 import type { MetadataRoute } from "next";
-export default function robots(): MetadataRoute.Robots { return { rules: { userAgent: "*", allow: "/", disallow: ["/api/"] }, sitemap: `${process.env.APP_URL ?? "http://localhost:3000"}/sitemap.xml` }; }
+import { getAbsoluteUrl } from "@/lib/seo/metadata";
+
+export default function robots(): MetadataRoute.Robots {
+  return {
+    rules: { userAgent: "*", allow: "/", disallow: ["/api/"] },
+    sitemap: getAbsoluteUrl("/sitemap.xml"),
+  };
+}

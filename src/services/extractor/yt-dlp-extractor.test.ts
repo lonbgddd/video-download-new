@@ -25,11 +25,11 @@ describe("Yt-DLP streaming", () => {
     expect(getPreferredYtDlpAudioFormat(format)).toBe("bestaudio[ext=webm]");
   });
 
-  it("extracts a single public A/V stream URL without downloading the media", () => {
+  it("extracts a single best media stream URL without downloading the media", () => {
     const args = buildYtDlpDirectUrlArgs(url);
 
     expect(args).toEqual(expect.arrayContaining(["--get-url", "--no-cache-dir"]));
-    expect(args[args.indexOf("--format") + 1]).toBe("best[vcodec!=none][acodec!=none]");
+    expect(args[args.indexOf("--format") + 1]).toBe("best");
     expect(args.slice(-2)).toEqual(["--", url.href]);
     expect(args).not.toContain("--output");
   });

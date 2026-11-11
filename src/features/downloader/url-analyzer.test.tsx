@@ -30,10 +30,38 @@ describe("UrlAnalyzer", () => {
 
     await user.type(screen.getByLabelText("URL video"), "https://www.youtube.com/watch?v=test123");
     await user.click(screen.getByRole("button", { name: "Phân tích" }));
-    await user.click(await screen.findByRole("button", { name: "Mở luồng video trực tiếp ở tab mới" }));
+    await user.click(await screen.findByRole("button", { name: "Mở link media trực tiếp ở tab mới" }));
 
     expect(fetchMock).toHaveBeenLastCalledWith("/api/media/direct-link", expect.objectContaining({ method: "POST" }));
     expect(tab.location.replace).toHaveBeenCalledWith("https://cdn.example/video");
     expect(tab.opener).toBeNull();
+  });
+
+  it("offers the direct-link fallback when a supported platform analysis fails", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      success: false,
+      error: { code: "PROCESSING_FAILED", message: "Không thể xử lý nội dung này." },
+    }), { status: 500, headers: { "Content-Type": "application/json" } }));
+    vi.stubGlobal("fetch", fetchMock);
+    renderAnalyzer();
+
+    await userEvent.type(screen.getByLabelText("URL video"), "https://www.reddit.com/r/videos/comments/test123");
+    await userEvent.click(screen.getByRole("button", { name: "Phân tích" }));
+
+    expect(await screen.findByRole("button", { name: "Mở link media trực tiếp ở tab mới" })).toBeInTheDocument();
+  });
+
+  it("explains when yt-dlp is missing instead of offering a fallback that cannot run", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      success: false,
+      error: { code: "EXTRACTOR_UNAVAILABLE", message: "Máy chủ chưa cài yt-dlp hoặc FFmpeg." },
+    }), { status: 500, headers: { "Content-Type": "application/json" } })));
+    renderAnalyzer();
+
+    await userEvent.type(screen.getByLabelText("URL video"), "https://www.youtube.com/watch?v=test123");
+    await userEvent.click(screen.getByRole("button", { name: "Phân tích" }));
+
+    expect(await screen.findByText("Máy chủ chưa cài yt-dlp hoặc FFmpeg.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Mở link media trực tiếp ở tab mới" })).not.toBeInTheDocument();
   });
 });

@@ -1,2 +1,35 @@
 import type { MetadataRoute } from "next";
-export default function sitemap(): MetadataRoute.Sitemap { const base = process.env.APP_URL ?? "http://localhost:3000"; return ["", "/history", "/terms", "/privacy", "/copyright"].map((route) => ({ url: `${base}${route}`, lastModified: new Date(), changeFrequency: route ? "monthly" : "weekly", priority: route ? 0.6 : 1 })); }
+import { getLocalizedRoutes, LOCALES } from "@/config/i18n.config";
+import { getAbsoluteUrl, getLocalizedPath } from "@/lib/seo/metadata";
+
+export default function sitemap(): MetadataRoute.Sitemap {
+  const localizedRoutes = getLocalizedRoutes();
+  const routesByPage = new Map<string, Map<string, (typeof localizedRoutes)[number]>>();
+  for (const route of localizedRoutes) {
+    const translations = routesByPage.get(route.page.id) ?? new Map();
+    translations.set(route.locale, route);
+    routesByPage.set(route.page.id, translations);
+  }
+  const staticRoutes = ["", "/history", "/terms", "/privacy", "/copyright"].map((route) => ({
+    url: getAbsoluteUrl(route),
+    lastModified: new Date(),
+    changeFrequency: route ? "monthly" as const : "weekly" as const,
+    priority: route ? 0.6 : 1,
+  }));
+  const localizedEntries = localizedRoutes.map((route) => ({
+    url: getAbsoluteUrl(getLocalizedPath(route)),
+    lastModified: new Date(route.page.updatedAt),
+    changeFrequency: "monthly" as const,
+    priority: route.page.category === "video" ? 0.8 : 0.7,
+    alternates: {
+      languages: Object.fromEntries(
+        [...LOCALES, "x-default"].flatMap((locale) => {
+          const targetLocale = locale === "x-default" ? "en" : locale;
+          const translation = routesByPage.get(route.page.id)?.get(targetLocale);
+          return translation ? [[locale, getAbsoluteUrl(getLocalizedPath(translation))]] : [];
+        }),
+      ),
+    },
+  }));
+  return [...staticRoutes, ...localizedEntries];
+}

@@ -1,2 +1,4 @@
 import { LegalPage } from "@/components/legal-page";
+import type { Metadata } from "next";
+export const metadata: Metadata = { alternates: { canonical: "/copyright" } };
 export default function CopyrightPage() { return <LegalPage title="Bản quyền"><p>Công cụ chỉ dành cho nội dung mà người dùng sở hữu, được cấp phép hoặc có quyền tải.</p><h2>Không vượt cơ chế bảo vệ</h2><p>VideoDownloader không hỗ trợ bypass DRM, paywall, tài khoản riêng tư, xác thực, hạn chế địa lý hoặc bất kỳ biện pháp kiểm soát truy cập nào.</p><h2>Yêu cầu gỡ bỏ</h2><p>Nếu bạn là chủ sở hữu quyền và cho rằng dịch vụ bị lạm dụng, hãy liên hệ đơn vị vận hành kèm bằng chứng quyền sở hữu và URL liên quan.</p></LegalPage>; }

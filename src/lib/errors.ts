@@ -18,6 +18,7 @@ export const publicErrorMessages: Record<ErrorCode, string> = {
   MEDIA_TOO_LONG: "Video dài hơn giới hạn cho phép.",
   RATE_LIMIT: "Bạn thao tác quá nhanh. Vui lòng thử lại sau.",
   PROCESSING_FAILED: "Không thể xử lý nội dung này.",
+  EXTRACTOR_UNAVAILABLE: "Máy chủ chưa cài yt-dlp hoặc FFmpeg. Hãy cài công cụ cần thiết rồi khởi động lại ứng dụng.",
   TIMEOUT: "Quá trình xử lý đã hết thời gian.",
   INTERNAL_ERROR: "Đã có lỗi xảy ra. Vui lòng thử lại.",
 };

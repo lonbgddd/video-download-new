@@ -10,6 +10,10 @@ export const platforms: Array<{ id: PlatformId; name: string; domains: string[];
   { id: "vimeo", name: "Vimeo", domains: ["vimeo.com"], status: "limited", note: "Cần yt-dlp; video công khai" },
   { id: "dailymotion", name: "Dailymotion", domains: ["dailymotion.com", "dai.ly"], status: "limited", note: "Cần yt-dlp; video công khai" },
   { id: "twitch", name: "Twitch", domains: ["twitch.tv"], status: "limited", note: "Cần yt-dlp; nội dung công khai" },
+  { id: "reddit", name: "Reddit", domains: ["reddit.com", "redd.it"], status: "limited", note: "Cần yt-dlp; video công khai" },
+  { id: "soundcloud", name: "SoundCloud", domains: ["soundcloud.com"], status: "limited", note: "Cần yt-dlp; audio công khai" },
+  { id: "pinterest", name: "Pinterest", domains: ["pinterest.com", "pin.it"], status: "limited", note: "Cần yt-dlp; nội dung công khai" },
+  { id: "bilibili", name: "Bilibili", domains: ["bilibili.com", "b23.tv"], status: "limited", note: "Cần yt-dlp; nội dung công khai" },
 ];
 
 export function detectPlatform(hostname: string): PlatformId {
