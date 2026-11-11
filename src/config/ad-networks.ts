@@ -10,6 +10,9 @@ export const ADSTERRA_NATIVE_SCRIPT_URL =
 export const ADSTERRA_NATIVE_CONTAINER_ID =
   "container-d468e51617172660732a1ebb7c995bcf";
 
+export const MONETAG_SCRIPT_URL = "https://quge5.com/88/tag.min.js";
+export const MONETAG_ZONE_ID = "308758";
+
 export const ADCASH_LIBRARY_SCRIPT_URL = "https://acscdn.com/script/aclib.js";
 
 export const ADCASH_AUTOTAG_ZONE_ID = "4v0l9qffcm";
