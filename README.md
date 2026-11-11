@@ -78,7 +78,9 @@ Các chủ đề mới kết hợp 25 loại media với 20 nhu cầu sử dụn
 
 ## Vị trí quảng cáo
 
-Quảng cáo tắt mặc định; đặt `ADS_ENABLED=true` để bật các script mạng đã cấu hình. Vùng hero/đầu trang không có banner: Social Bar chỉ được gọi khi người đọc cuộn gần điểm giữa nội dung (`IntersectionObserver`, vùng đệm 250 px), còn Native Banner chỉ được gọi gần cuối bài. Slot banner giữ chiều cao tối thiểu để hạn chế layout shift. Homepage đặt Social Bar sau thẻ lợi ích và Native Banner sau hướng dẫn; landing page đặt Social Bar sau các bước và Native Banner sau phần liên kết liên quan.
+Quảng cáo tắt mặc định; đặt `ADS_ENABLED=true` để bật các script mạng đã cấu hình. Các vị trí Native riêng gồm: banner nhỏ phía trên header, hai rail chỉ trên màn hình rất rộng (từ 1800 px), slot dưới ô nhập link, slot trong dialog tải và Native cuối bài. Mỗi slot mới chỉ tải khi gần vùng nhìn thấy (`IntersectionObserver`) và cần một cặp URL script/container ID riêng; không sao chép container của một zone vào nhiều vị trí. Nếu chưa cấu hình cặp riêng, vị trí đó sẽ không render. `NEXT_PUBLIC_ADSTERRA_*` được nhúng vào client build và không phải nơi đặt secret.
+
+Social Bar/Monetag ở giữa bài và Native cuối bài giữ nguyên vị trí hiện tại. Slot trong dialog nằm dưới trạng thái/nút tải và chỉ tải khi dialog mở; hộp thoại có thể cuộn để nút đóng và nội dung vẫn truy cập được. Các slot giữ chiều cao dự kiến để hạn chế layout shift. Kiểm tra lại trên thiết bị thật, consent/cookie policy, Core Web Vitals và chính sách của nhà cung cấp trước khi phát hành.
 
 Pop-under hiện dùng khóa `localStorage` để giới hạn một lần trong 24 giờ trên mỗi trình duyệt; chế độ riêng tư hoặc khi storage không khả dụng sẽ không bật pop-under để tránh tần suất không kiểm soát. Social Bar, Native Banner và Monetag zone `308758` dùng cấu hình trong `src/config/ad-networks.ts`. Script Monetag chỉ được tải khi cuộn tới vị trí giữa nội dung (`IntersectionObserver`, vùng đệm 250 px). Không bật đồng thời auto-placement bên ngoài các slot này nếu cần giữ nguyên vị trí và UX đã mô tả. Các mạng quảng cáo có thể thay đổi creative hoặc hành vi hiển thị; kiểm tra lại trên thiết bị thật, consent/cookie policy, Core Web Vitals và chính sách của nhà cung cấp trước khi phát hành.
 
@@ -116,6 +118,11 @@ Với Next.js, `ADS_ENABLED` được đọc khi prerender các trang. Khi dùng
 | `RATE_LIMIT_WINDOW` | `60000` | Cửa sổ rate limit (ms) |
 | `RATE_LIMIT_MAX` | `20` | Request tối đa/cửa sổ/IP |
 | `ADS_ENABLED` | `false` | Bật/tắt quảng cáo; đặt `true` trước khi build và khi chạy production |
+| `NEXT_PUBLIC_ADSTERRA_HEADER_SCRIPT_URL` / `NEXT_PUBLIC_ADSTERRA_HEADER_CONTAINER_ID` | trống | Zone Native riêng phía trên header |
+| `NEXT_PUBLIC_ADSTERRA_LEFT_RAIL_SCRIPT_URL` / `NEXT_PUBLIC_ADSTERRA_LEFT_RAIL_CONTAINER_ID` | trống | Zone Native riêng bên trái, chỉ màn hình từ 1800 px |
+| `NEXT_PUBLIC_ADSTERRA_RIGHT_RAIL_SCRIPT_URL` / `NEXT_PUBLIC_ADSTERRA_RIGHT_RAIL_CONTAINER_ID` | trống | Zone Native riêng bên phải, chỉ màn hình từ 1800 px |
+| `NEXT_PUBLIC_ADSTERRA_INPUT_SCRIPT_URL` / `NEXT_PUBLIC_ADSTERRA_INPUT_CONTAINER_ID` | trống | Zone Native riêng dưới ô nhập link |
+| `NEXT_PUBLIC_ADSTERRA_DOWNLOAD_MODAL_SCRIPT_URL` / `NEXT_PUBLIC_ADSTERRA_DOWNLOAD_MODAL_CONTAINER_ID` | trống | Zone Native riêng trong dialog tải |
 | `YT_DLP_PATH` | `yt-dlp` | Binary extractor |
 | `FFMPEG_PATH` | `ffmpeg` | Binary FFmpeg |
 | `FFPROBE_PATH` | `ffprobe` | Binary FFprobe |

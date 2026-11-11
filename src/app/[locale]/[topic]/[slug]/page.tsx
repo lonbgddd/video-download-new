@@ -41,6 +41,7 @@ export default async function LocalizedLandingPage({ params }: LandingPageProps)
   const route = getLocalizedRouteByParams(locale, topic, slug);
   if (!route) notFound();
   const copy = pageCopy[route.locale];
+  const adsEnabled = process.env.ADS_ENABLED === "true";
 
   return (
     <>
@@ -67,7 +68,7 @@ export default async function LocalizedLandingPage({ params }: LandingPageProps)
             <h2 id="seo-tool-title">
               {copy.checkLink}
             </h2>
-            <UrlAnalyzer locale={route.locale} />
+            <UrlAnalyzer locale={route.locale} adsEnabled={adsEnabled} />
           </section>
 
           <section className="seo-section" aria-labelledby="seo-steps-title">

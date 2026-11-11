@@ -4,7 +4,24 @@ import { AdsterraNative } from "@/components/ads/adsterra-native";
 import { AdsterraSocialBar } from "@/components/ads/adsterra-social-bar";
 import { MonetagZone } from "@/components/ads/monetag-zone";
 
-export function AdSlot({ position, locale = "vi" }: { position: "mid-article" | "end-article"; locale?: Locale }) {
+export type AdSlotPosition =
+  | "mid-article"
+  | "end-article"
+  | "above-header"
+  | "side-left"
+  | "side-right"
+  | "near-input"
+  | "download-modal";
+
+export function AdSlot({
+  position,
+  locale = "vi",
+  active = true,
+}: {
+  position: AdSlotPosition;
+  locale?: Locale;
+  active?: boolean;
+}) {
   const enabled = process.env.ADS_ENABLED === "true";
   if (position === "mid-article") {
     return (
@@ -14,5 +31,12 @@ export function AdSlot({ position, locale = "vi" }: { position: "mid-article" | 
       </>
     );
   }
-  return <AdsterraNative enabled={enabled} label={UI_CONTENT[locale].misc.ad} />;
+  return (
+    <AdsterraNative
+      enabled={enabled}
+      active={active}
+      placement={position}
+      label={UI_CONTENT[locale].misc.ad}
+    />
+  );
 }

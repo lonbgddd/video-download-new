@@ -3,17 +3,28 @@
 import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
 import {
-  ADSTERRA_NATIVE_CONTAINER_ID,
-  ADSTERRA_NATIVE_SCRIPT_URL,
+  getAdsterraNativeUnit,
+  type AdsterraNativePlacement,
 } from "@/config/ad-networks";
 
-export function AdsterraNative({ enabled, label }: { enabled: boolean; label: string }) {
+export function AdsterraNative({
+  enabled,
+  label,
+  placement = "end-article",
+  active = true,
+}: {
+  enabled: boolean;
+  label: string;
+  placement?: AdsterraNativePlacement;
+  active?: boolean;
+}) {
   const slotRef = useRef<HTMLElement>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
+  const unit = getAdsterraNativeUnit(placement);
 
   useEffect(() => {
     const slot = slotRef.current;
-    if (!enabled || !slot) return;
+    if (!enabled || !active || !unit || !slot) return;
     if (!("IntersectionObserver" in window)) return;
 
     const observer = new IntersectionObserver(([entry]) => {
@@ -23,24 +34,30 @@ export function AdsterraNative({ enabled, label }: { enabled: boolean; label: st
     }, { rootMargin: "250px 0px" });
     observer.observe(slot);
     return () => observer.disconnect();
-  }, [enabled]);
+  }, [active, enabled, unit]);
 
-  if (!enabled) return null;
+  if (!enabled || !unit) return null;
 
   return (
-    <aside ref={slotRef} className="ad-slot adsterra-native-slot" aria-label={label} data-ad-network="adsterra-native" data-ad-placement="end-article">
+    <aside
+      ref={slotRef}
+      className={`ad-slot adsterra-native-slot ad-placement-${placement}`}
+      aria-label={label}
+      data-ad-network="adsterra-native"
+      data-ad-placement={placement}
+    >
       <span className="ad-disclosure">{label}</span>
-      {shouldLoad && (
+      {active && shouldLoad && (
         <>
           <Script
-            id="adsterra-native-script"
-            src={ADSTERRA_NATIVE_SCRIPT_URL}
+            id={`adsterra-native-script-${placement}`}
+            src={unit.scriptUrl}
             strategy="lazyOnload"
             async
             defer
             data-cfasync="false"
           />
-          <div id={ADSTERRA_NATIVE_CONTAINER_ID} />
+          <div id={unit.containerId} />
         </>
       )}
     </aside>

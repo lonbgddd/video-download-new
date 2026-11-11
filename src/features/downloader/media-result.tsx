@@ -24,9 +24,11 @@ const convertedLabels: Record<Locale, string> = { vi: "Đã chuyển đổi", en
 export function MediaResult({
   media,
   locale,
+  adsEnabled = false,
 }: {
   media: MediaMetadata;
   locale: Locale;
+  adsEnabled?: boolean;
 }) {
   const copy = UI_CONTENT[locale].result;
   const [tab, setTab] = useState<Tab>(
@@ -234,6 +236,7 @@ export function MediaResult({
         onOpenChange={setModalOpen}
         onCompleted={onCompleted}
         locale={locale}
+        adsEnabled={adsEnabled}
       />
     </motion.section>
   );
