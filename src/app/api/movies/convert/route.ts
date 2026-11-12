@@ -16,6 +16,7 @@ export async function POST(request: Request) {
     if (media.formats[0]?.id !== "original-hls") throw new AppError("FORMAT_NOT_AVAILABLE", "Expected HLS source");
     return ok(await hlsConverter.prepare(media.sourceUrl, media.title, request.signal));
   } catch (error) {
+    console.error(JSON.stringify({ level: "error", component: "movie-convert", code: error instanceof AppError ? error.code : "INTERNAL_ERROR", message: error instanceof Error ? error.message : "Unknown error" }));
     if (error instanceof AppError && error.code === "FORMAT_NOT_AVAILABLE") {
       return Response.json({ success: false, error: { code: error.code, message: error.message } }, { status: error.status });
     }
