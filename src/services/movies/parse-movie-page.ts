@@ -1,7 +1,12 @@
 import { load } from "cheerio/slim";
 
 export type MovieCandidate = { url: string; kind: "mp4" | "hls" | "dash"; pageUrl: string };
-const normalize = (value: string) => value.replace(/\\\//g, "/").replace(/\\u0026/gi, "&").replace(/&amp;/gi, "&");
+const normalize = (value: string) => value
+  .replace(/\\\\/g, "\\")
+  .replace(/\\\//g, "/")
+  .replace(/\\"/g, '"')
+  .replace(/\\u0026/gi, "&")
+  .replace(/&amp;/gi, "&");
 
 // Parse markup with a DOM library; never evaluate third-party JavaScript.
 export function parseMoviePage(html: string, pageUrl: URL) {
@@ -81,5 +86,8 @@ export function parseMoviePage(html: string, pageUrl: URL) {
     const text = $(element).html() || "";
     scan(text);
   });
+  // Next.js Flight payloads can keep escaped URLs outside a parseable JSON
+  // record. Scan the normalized document as a final, bounded URL pass.
+  for (const match of normalize(html).matchAll(/https?:\/\/[^\s"'<>\\]+\.(?:m3u8|mp4|mpd)(?:\?[^\s"'<>\\]*)?/gi)) collect(match[0]);
   return { title: $("title").first().text().trim().slice(0, 200) || pageUrl.hostname, sources: [...sources.values()], embeds: [...embeds] };
 }
