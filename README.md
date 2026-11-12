@@ -86,7 +86,25 @@ Social Bar ở giữa bài và Native cuối bài giữ nguyên vị trí hiện
 
 Pop-under hiện dùng khóa `localStorage` để giới hạn một lần trong 24 giờ trên mỗi trình duyệt; chế độ riêng tư hoặc khi storage không khả dụng sẽ không bật pop-under để tránh tần suất không kiểm soát. Không bật thêm auto-placement ngoài các loader/slot đã khai báo nếu cần giữ nguyên tần suất và UX. Các mạng quảng cáo có thể thay đổi creative hoặc hành vi hiển thị; kiểm tra lại trên thiết bị thật trước khi phát hành.
 
-Google Analytics và toàn bộ quảng cáo bị chặn mặc định cho đến khi người dùng đồng ý đúng nhóm trong Cookie Preferences. Lựa chọn được lưu 180 ngày; người dùng có thể đổi/rút lại từ footer và Global Privacy Control luôn tắt quảng cáo theo dõi. Với Next.js, `ADS_ENABLED` được đọc khi prerender; thay biến build-time cần build/restart lại ứng dụng.
+Firebase Analytics và toàn bộ quảng cáo bị chặn mặc định cho đến khi người dùng đồng ý đúng nhóm trong Cookie Preferences. Lựa chọn được lưu 180 ngày; người dùng có thể đổi/rút lại từ footer và Global Privacy Control luôn tắt quảng cáo theo dõi. Với Next.js, `ADS_ENABLED` được đọc khi prerender; thay biến build-time cần build/restart lại ứng dụng.
+
+### Thử nghiệm A/B cho quảng cáo
+
+Firebase Remote Config được tải sau khi người dùng đồng ý cả Analytics và quảng cáo. Trong Firebase Console, tạo các parameter kiểu Boolean dưới đây (default `true`), sau đó tạo một A/B test riêng cho parameter cần đo. Dùng `true` cho control (giữ định dạng quảng cáo) và `false` cho variant (tắt riêng định dạng đó):
+
+| Remote Config parameter | Định dạng |
+|---|---|
+| `ads_monetag_vignette_enabled` | Monetag Vignette trong dialog tải |
+| `ads_monetag_in_page_push_enabled` | Monetag In-Page Push |
+| `ads_adcash_interstitial_enabled` | Adcash Interstitial |
+| `ads_adsterra_popunder_enabled` | Adsterra Pop-under |
+| `ads_adsterra_social_bar_enabled` | Adsterra Social Bar |
+| `ads_adsterra_display_enabled` | Các banner Display cố định |
+| `ads_adsterra_native_enabled` | Các vị trí Native |
+
+Firebase tự ghi nhận nhóm experiment khi Remote Config được kích hoạt. Có thể chọn `analyze_success` hoặc `download_completed` làm conversion event; các event này chỉ được gửi khi người dùng đã cho phép Analytics. Thử nghiệm này so sánh bật/tắt từng định dạng; muốn so sánh zone/network hay creative khác nhau thì cần bổ sung cấu hình biến thể tương ứng. Nếu Remote Config không tải được, ứng dụng dùng cấu hình mặc định hiện tại. Firebase web API key/config nằm ở client bundle; hãy giới hạn domain trong Firebase và không dùng config này làm cơ chế phân quyền.
+
+Riêng Adsterra Pop-under có parameter thử nghiệm biến thể `ads_adsterra_popunder_variant` kiểu String: `existing` dùng tag đang hoạt động (control), `provided` dùng tag Pop-under mới (variant). Tạo Firebase A/B test cho parameter String này và đặt phân bổ control/variant theo tỷ lệ mong muốn; `ads_adsterra_popunder_enabled` vẫn là công tắc bật/tắt tổng. Consent quảng cáo và giới hạn tải tag một lần/24 giờ trên trình duyệt vẫn được áp dụng cho cả hai biến thể.
 
 ## Quyền riêng tư và tài liệu pháp lý
 

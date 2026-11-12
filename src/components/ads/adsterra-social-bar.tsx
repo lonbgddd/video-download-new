@@ -4,10 +4,16 @@ import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
 import { ADSTERRA_SOCIAL_BAR_SCRIPT_URL } from "@/config/ad-networks";
 import { useCookieConsent } from "@/privacy/consent-store";
+import { useAdExperiments } from "./ad-experiments-provider";
 
 export function AdsterraSocialBar({ enabled }: { enabled: boolean }) {
   const consent = useCookieConsent();
-  const advertisingEnabled = enabled && consent?.advertising === true;
+  const experiments = useAdExperiments();
+  const advertisingEnabled =
+    enabled &&
+    experiments.ready &&
+    experiments.adsterraSocialBar &&
+    consent?.advertising === true;
   const triggerRef = useRef<HTMLDivElement>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
 

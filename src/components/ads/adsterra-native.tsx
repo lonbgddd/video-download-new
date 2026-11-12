@@ -9,6 +9,7 @@ import {
 } from "@/config/ad-networks";
 import { AdsterraDisplayBanner } from "@/components/ads/adsterra-display-banner";
 import { useCookieConsent } from "@/privacy/consent-store";
+import { useAdExperiments } from "./ad-experiments-provider";
 
 export function AdsterraNative({
   enabled,
@@ -23,9 +24,17 @@ export function AdsterraNative({
 }) {
   const slotRef = useRef<HTMLElement>(null);
   const consent = useCookieConsent();
-  const advertisingEnabled = enabled && consent?.advertising === true;
+  const experiments = useAdExperiments();
   const displayUnit = getAdsterraDisplayUnit(placement);
   const unit = getAdsterraNativeUnit(placement);
+  const formatEnabled = displayUnit
+    ? experiments.adsterraDisplay
+    : experiments.adsterraNative;
+  const advertisingEnabled =
+    enabled &&
+    experiments.ready &&
+    formatEnabled &&
+    consent?.advertising === true;
   const shouldLoadImmediately = [
     "above-header",
     "side-left",

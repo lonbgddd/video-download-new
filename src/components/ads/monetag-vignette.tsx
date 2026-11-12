@@ -6,6 +6,7 @@ import {
   MONETAG_VIGNETTE_ZONE_ID,
 } from "@/config/ad-networks";
 import { useCookieConsent } from "@/privacy/consent-store";
+import { useAdExperiments } from "./ad-experiments-provider";
 
 /**
  * Mount this component only while an action dialog is open. Next.js loads the
@@ -22,7 +23,16 @@ export function MonetagVignette({
   active: boolean;
 }) {
   const consent = useCookieConsent();
-  if (!enabled || !active || consent?.advertising !== true) return null;
+  const experiments = useAdExperiments();
+  if (
+    !enabled ||
+    !active ||
+    !experiments.ready ||
+    !experiments.monetagVignette ||
+    consent?.advertising !== true
+  ) {
+    return null;
+  }
 
   return (
     <Script

@@ -50,6 +50,10 @@ function getSnapshot(): CookieConsent | null {
   return currentConsent;
 }
 
+export function hasAnalyticsConsent(): boolean {
+  return getSnapshot()?.analytics === true;
+}
+
 function getServerSnapshot(): null {
   return null;
 }
